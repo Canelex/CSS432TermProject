@@ -9,15 +9,18 @@
 #include <netinet/tcp.h>  // SO_REUSEADDR
 #include <sys/uio.h>      // writev
 #include <cstring>
-
-
+#include <thread>
+#include <pthread.h>
 using namespace std;
 
 const unsigned int BUF_SIZE = 65535;
 
-int main () {
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
+void* threadConnection(void* newSd);
 
+int main () 
+{
     // Create the socket
     int server_port = 12345;
 
@@ -41,25 +44,60 @@ int main () {
     int n = 5;
     listen(serverSd, n);  // listen on the socket and allow up to n connections to wait.
 
-    // Accept the connection as a new socket
-
-    sockaddr_in newsock;   // place to store parameters for the new connection
-    socklen_t newsockSize = sizeof(newsock);
- 
-    while (1) {
-	    int newSd = accept(serverSd, (sockaddr *)&newsock, &newsockSize);  // grabs the new connection and assigns it a temporary socket
-        // Read data from the socket
-
-        char buf[BUF_SIZE];
-	    int bytesRead = read(newSd, buf, BUF_SIZE);
-	    cout << "read " << bytesRead << " bytes" << endl;
-	    cout << "Received: " << buf << endl;
-        memset(buf, 0, sizeof(buf));
-        //buf[0] = '\0';
-        // Close the socket
-    
-	    close(newSd);
+    pthread_t tid[5];
+    int i = 0;
+    while(true)
+    {
+        sockaddr_in newsock;   // place to store parameters for the new connection
+        socklen_t newsockSize = sizeof(newsock);
+        int newSd = accept4(serverSd, (sockaddr *)&newsock, &newsockSize, SOCK_NONBLOCK);  // grabs the new connection and assigns it a temporary socket
+        if(newSd == -1)
+        {
+            continue;
+        }
+        pthread_create(&tid[i], NULL, threadConnection, (void*)&newSd);
+        i++;
+        if(i >= 5)
+        {
+            i = 0;
+            while(i < 5)
+            {
+                pthread_join(tid[i], NULL);
+            }
+            i = 0;
+        }
     }
+    
+    
     return 0;
+}
 
+void* threadConnection(void* newSd)
+{
+    while(true)
+    { 
+        // Read data from the socket
+        char buf[BUF_SIZE];
+        int bytesRead = read(*(int*)newSd, buf, BUF_SIZE);
+        if(bytesRead == 0 || bytesRead == -1)
+        {
+            continue;
+        }
+        pthread_mutex_lock(&lock);
+        cout << "read " << bytesRead << " bytes" << endl;
+        cout << "Received: " << buf << endl;
+        if(strcmp(buf, "exit") == 0)
+        {
+            cout << "Closing connection" << endl;
+            close(*(int*)newSd);
+            pthread_mutex_unlock(&lock);
+            break;
+        }
+        memset(buf, 0, sizeof(buf));
+        //buf = "message received";
+        //write(*(int*)newSd, buf, sizeof(buf));
+        pthread_mutex_unlock(&lock);
+    }
+    
+    return NULL;
 }
