@@ -4,3 +4,5 @@ client/Debug
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+
+*.vscode
