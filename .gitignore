@@ -1,5 +1,5 @@
-client/.vs
-client/Debug
+*/.vs
+*/Debug
 
 *.vcxproj
 *.vcxproj.filters
