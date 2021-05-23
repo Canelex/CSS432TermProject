@@ -63,6 +63,7 @@ int main ()
             while(i < 5)
             {
                 pthread_join(tid[i], NULL);
+                i++;
             }
             i = 0;
         }
@@ -74,11 +75,13 @@ int main ()
 
 void* threadConnection(void* newSd)
 {
+    int fd = *(int*)newSd;
+
     while(true)
     { 
         // Read data from the socket
         char buf[BUF_SIZE];
-        int bytesRead = read(*(int*)newSd, buf, BUF_SIZE);
+        int bytesRead = read(fd, buf, BUF_SIZE);
         if(bytesRead == 0 || bytesRead == -1)
         {
             continue;
@@ -89,7 +92,7 @@ void* threadConnection(void* newSd)
         if(strcmp(buf, "exit") == 0)
         {
             cout << "Closing connection" << endl;
-            close(*(int*)newSd);
+            close(fd);
             pthread_mutex_unlock(&lock);
             break;
         }
