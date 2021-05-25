@@ -11,6 +11,7 @@
 #include "app.h"
 #include "texman.h"
 #include "screen_register.h"
+#include "SDL_ttf.h"
 
 /* Constructor and destructor */
 App::App() {}
@@ -39,6 +40,10 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         renderer = SDL_CreateRenderer(window, -1, 0);
         if (renderer) {
             cout << "Renderer created!" << endl;
+        }
+
+        if (TTF_Init() == 0) {
+            cout << "Font initialized!" << endl;
         }
 
         // Create some screens

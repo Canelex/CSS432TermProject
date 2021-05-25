@@ -1,5 +1,7 @@
 #pragma once
 #include "screen.h"
+#include "SDL_ttf.h"
+#include <string>
 
 class RegisterScreen : public Screen
 {
@@ -38,8 +40,15 @@ public:
     void render();
 
 private:
+    // Background
+    SDL_Rect rectBG;
+    SDL_Texture* texBG;
+    TTF_Font* font;
+    std::string username;
+
     // Username Rect
     SDL_Rect rectName;
+    SDL_Texture* texName;
 
     // Button rect + image
     SDL_Rect rectBtn;
