@@ -1,4 +1,6 @@
-#pragma once
+//This class defines the lobby object which holds players and runs the game
+#ifndef LOBBY
+#define LOBBY
 #include <string>
 #include <iostream>
 #include <vector>
@@ -11,6 +13,7 @@ public:
     vector<player> getPlayers();
     int getLobbyId();
     int getLobbySize();
+    int getLobbyNumPlayers();
 
     void setLobbySize(int size);
     void setLobbyName(string name);
@@ -28,3 +31,5 @@ private:
 
 
 };
+
+#endif

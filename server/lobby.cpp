@@ -14,6 +14,11 @@ int lobby::getLobbySize()
 {
     return this->lobbySize;
 }
+
+int lobby::getLobbyNumPlayers()
+{
+    return this->players.size();
+}
     
 void lobby::setLobbySize(int size)
 {

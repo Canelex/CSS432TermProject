@@ -1,4 +1,6 @@
-#pragma once
+//This class defines the player object which interacts with lobbies and the gameplay
+#ifndef PLAYER
+#define PLAYER
 #include <string>
 #include <iostream>
 
@@ -27,3 +29,5 @@ private:
     int y = 0;
     void* color;
 };
+
+#endif
