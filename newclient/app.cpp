@@ -1,5 +1,15 @@
+/**
+* app.h/cpp
+* 5/23/2021
+*
+* This class is responsible for all things related to the application and
+* game. This includes including input, rendering, and updating for screens
+* such as register, game selection, and playing. It uses the class ____ for
+* networking and connecting to the server.
+*/
+
 #include "app.h"
-#include "SDL_image.h"
+#include "texman.h"
 
 SDL_Texture* texture;
 SDL_Rect srcR, destR;
@@ -36,9 +46,7 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         }
 
         // Load some textures
-        SDL_Surface* tempSurface = IMG_Load("assets/test.png");
-        texture = SDL_CreateTextureFromSurface(renderer, tempSurface);
-        SDL_FreeSurface(tempSurface);
+        texture = TexMan::LoadTexture("assets/test.png", renderer);
 
         running = true;
     }

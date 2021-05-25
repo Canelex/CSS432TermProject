@@ -10,7 +10,10 @@
 
 #pragma once
 #include <iostream>
+#include <vector>
 #include <SDL.h>
+#include "SDL_image.h"
+#include "screen.h"
 using namespace std;
 
 class App
@@ -53,8 +56,19 @@ public:
     bool isRunning() const;
 
 private:
+    // Is the game running?
     bool running;
+
+    // vector of screens
+    vector<Screen*> screens;
+
+    // Which screen is active?
+    int activeScreenIndex;
+
+    // SDL window pointer
     SDL_Window* window;
+
+    // SDL renderer pointer
     SDL_Renderer* renderer;
 };
 
