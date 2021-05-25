@@ -10,9 +10,7 @@
 
 #include "app.h"
 #include "texman.h"
-
-SDL_Texture* texture;
-SDL_Rect srcR, destR;
+#include "screen_register.h"
 
 /* Constructor and destructor */
 App::App() {}
@@ -40,13 +38,19 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         // Create a renderer
         renderer = SDL_CreateRenderer(window, -1, 0);
         if (renderer) {
-            // Set renderer color to white
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
             cout << "Renderer created!" << endl;
         }
 
-        // Load some textures
-        texture = TexMan::LoadTexture("assets/test.png", renderer);
+        // Create some screens
+        screens.push_back(new RegisterScreen(renderer));
+
+        // Set the active screen index
+        activeScreenIndex = 0;
+
+        // Initialize each screen
+        for (int i = 0; i < screens.size(); i++) {
+            screens[i]->init();
+        }
 
         running = true;
     }
@@ -68,6 +72,7 @@ void App::handleEvents() {
         running = false;
         break;
     default:
+        screens[activeScreenIndex]->handleEvent(event);
         break;
     }
 }
@@ -77,9 +82,7 @@ void App::handleEvents() {
 * the main application loop.
 */
 void App::update() {
-    destR.w = 50;
-    destR.h = 50;
-    destR.x++;
+    screens[activeScreenIndex]->update();
 }
 
 /**
@@ -87,10 +90,14 @@ void App::update() {
 * every tick by the main loop, after inputs & updates have been ran.
 */
 void App::render() {
-    // Clear renderer
+    // Select white
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    // Clear screen w/ white
     SDL_RenderClear(renderer);
 
-    SDL_RenderCopy(renderer, texture, NULL, &destR);
+    // Have the active screen render
+    screens[activeScreenIndex]->render();
 
     // Update renderer
     SDL_RenderPresent(renderer);
