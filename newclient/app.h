@@ -12,10 +12,11 @@
 #include <iostream>
 #include <vector>
 #include <SDL.h>
-#include "SDL_image.h"
 #include "screen.h"
-#include "netman.h"
 using namespace std;
+
+// Define screen ahead of time
+class Screen;
 
 class App
 {
@@ -65,9 +66,6 @@ public:
 private:
     // Is the game running?
     bool running;
-
-    // Reference to netman
-    NetMan netman;
 
     // vector of screens
     vector<Screen*> screens;

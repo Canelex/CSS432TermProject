@@ -1,15 +1,14 @@
 #pragma once
-#include "app.h"
-#include <string>
+#include "screen.h"
 
-class RegisterScreen : public Screen
+class LobbiesScreen : public Screen
 {
 public:
     /**
     * This constructor just stores a reference to the renderer
     * for later (rendering).
     */
-    RegisterScreen(App* app, SDL_Renderer* renderer) : Screen(app, renderer) {}
+    LobbiesScreen(App* app, SDL_Renderer* renderer) : Screen(app, renderer) {}
 
     /*
     * This method is called when the game is first created. It
@@ -39,17 +38,8 @@ public:
     void render();
 
 private:
-    // Background
+    // Background objects
     SDL_Rect rectBG;
     SDL_Texture* texBG;
-    std::string username;
-
-    // Username Rect
-    SDL_Rect rectName;
-    SDL_Texture* texName;
-
-    // Button rect + image
-    SDL_Rect rectBtn;
-    SDL_Texture* texBtn;
 };
 
