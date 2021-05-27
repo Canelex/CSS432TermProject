@@ -47,6 +47,9 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
             cout << "Font initialized!" << endl;
         }
 
+        // Connect to server
+        netman.connectToServer();
+
         // Create some screens
         screens.push_back(new RegisterScreen(this, renderer));
         screens.push_back(new LobbiesScreen(this, renderer));
@@ -135,4 +138,11 @@ void App::openScreen(int id) {
 */
 bool App::isRunning() const {
     return running;
+}
+
+/**
+* Returns the network manager
+*/
+NetMan& App::getNetMan() {
+    return netman;
 }
