@@ -194,12 +194,20 @@ void addLobby(lobby* l)
 
 player* registration(char* buf, int& fd)
 {
+    player* p;
+    string message;
     char* token;
     token = strtok(buf, "R");
-    player* p = new player();
+    if(strlen(token) < 3 || strlen(token) > 10)
+    {
+        message = "RF\n";
+        write(fd, message.c_str(), message.length());
+        return NULL;
+    }
+    p = new player();
     p->setName(token);
     p->setSocket(fd);
-    string message = "Registration Success!!!\n";
+    message = "RT\n";
     write(p->getPlayerSocket(), message.c_str(), message.length());
     return p;
 }
@@ -218,8 +226,8 @@ void listLobbies(player* p)
         message.append(l->getLobbyName());
         message.append(to_string(l->getLobbyNumPlayers()));
         message.append(to_string(l->getLobbySize()));
+        message.append("\n");
     }
-    message.append("\n");
     write(p->getPlayerSocket(), message.c_str(), message.length());
     return;
 }
