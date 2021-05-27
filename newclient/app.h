@@ -13,6 +13,7 @@
 #include <vector>
 #include <SDL.h>
 #include "screen.h"
+#include "netman.h"
 using namespace std;
 
 // Define screen ahead of time
@@ -63,6 +64,11 @@ public:
     */
     bool isRunning() const;
 
+    /**
+    * Returns the network manager
+    */
+    NetMan& getNetMan();
+
 private:
     // Is the game running?
     bool running;
@@ -72,6 +78,9 @@ private:
 
     // Which screen is active?
     int activeScreenIndex;
+
+    // NetMan instance
+    NetMan netman;
 
     // SDL window pointer
     SDL_Window* window;

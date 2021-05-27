@@ -1,4 +1,5 @@
 #include "screen_lobbies.h"
+#include "netman.h"
 
 /*
 * This method is called when the game is first created. It
@@ -19,7 +20,17 @@ void LobbiesScreen::init() {
 * screen is currently being rendered.
 */
 void LobbiesScreen::handleEvent(SDL_Event& event) {
+    // Mouse click
+    if (event.type == SDL_MOUSEBUTTONDOWN) {
 
+        // We only care about left clicks
+        if (event.button.button != SDL_BUTTON_LEFT) {
+            return;
+        }
+
+        // Get the server list
+        app->getNetMan().getServerList();
+    }
 }
 
 /**

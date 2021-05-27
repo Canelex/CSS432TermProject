@@ -55,7 +55,7 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
 
         // Name is too long
         if (username.size() >= 10) {
-            return;
+            //return;
         }
 
         // Valid key
@@ -74,7 +74,7 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
 
         // Make sure name is valid
         if (username.size() < 3) {
-            return;
+            //return;
         }
 
         // Was it in the box?
@@ -91,8 +91,11 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
             return;
         }
 
-        // Open screen #1
-        app->openScreen(1);
+        bool res = app->getNetMan().sendRegister(username);
+        if (res) {
+            // Open screen #1
+            app->openScreen(1);
+        }
     }
 }
 
