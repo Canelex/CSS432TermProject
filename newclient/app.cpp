@@ -10,6 +10,7 @@
 
 #include "app.h"
 #include "texman.h"
+#include "netman.h"
 #include "screen_register.h"
 #include "SDL_ttf.h"
 
@@ -56,6 +57,9 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         for (int i = 0; i < screens.size(); i++) {
             screens[i]->init();
         }
+
+        // Connect to server
+        netman.connectToServer();
 
         running = true;
     }
@@ -117,6 +121,15 @@ void App::clean() {
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
     cout << "Game cleaned." << endl;
+}
+
+/**
+* This function opens another screen. It accepts an id parameter which switches
+* the activeScreenIndex field
+*/
+void App::openScreen(int id) {
+    // Update the index
+    activeScreenIndex = id;
 }
 
 /**

@@ -1,15 +1,17 @@
 #include <iostream>
 #include "app.h"
 #include "SDL.h"
-
-using namespace std;
+#include "netman.h"
 
 App* app;
 
 int main(int argc, char* argv[]) {
-	
+
+    NetMan man;
+    man.connectToServer();
+
     // Frame delay
-    const int FPS = 30;
+    /**const int FPS = 30;
     const int frameDelay = 1000 / FPS;
     Uint32 frameStart;
     int frameTime;
@@ -36,6 +38,6 @@ int main(int argc, char* argv[]) {
     }
 
     // Cleanup the process
-    app->clean();
+    app->clean();**/
 	return 0;
 }

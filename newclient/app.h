@@ -14,6 +14,7 @@
 #include <SDL.h>
 #include "SDL_image.h"
 #include "screen.h"
+#include "netman.h"
 using namespace std;
 
 class App
@@ -51,6 +52,12 @@ public:
     void clean();
 
     /**
+    * This function opens another screen. It accepts an id parameter which switches
+    * the activeScreenIndex field
+    */
+    void openScreen(int id);
+
+    /**
     * Returns whether the application is still running.
     */
     bool isRunning() const;
@@ -58,6 +65,9 @@ public:
 private:
     // Is the game running?
     bool running;
+
+    // Reference to netman
+    NetMan netman;
 
     // vector of screens
     vector<Screen*> screens;
