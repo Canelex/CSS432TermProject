@@ -12,14 +12,15 @@
 #include <thread>
 #include <pthread.h>
 #include <string.h>
+#include <sys/time.h>
 #include "lobby.h"
-using namespace std;
+//using namespace std;
 
 const unsigned int BUF_SIZE = 65535;
 
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-vector<lobby*> lobbies;
+std::vector<lobby*> lobbies;
 
 void* threadConnection(void* newSd);
 
@@ -80,29 +81,40 @@ int main ()
     int n = 5;
     listen(serverSd, n);  // listen on the socket and allow up to n connections to wait.
 
-    pthread_t tid[5];
+    std::vector<pthread_t> threadHolder;
     int i = 0;
     while(true)
     {
         sockaddr_in newsock;   // place to store parameters for the new connection
         socklen_t newsockSize = sizeof(newsock);
         int newSd = accept4(serverSd, (sockaddr *)&newsock, &newsockSize, SOCK_NONBLOCK);  // grabs the new connection and assigns it a temporary socket
+        if(i >= 5)
+        {
+            i = 0;
+            while(i < threadHolder.size())
+            {
+                int testJoin = pthread_tryjoin_np(threadHolder[i], NULL);
+                if(testJoin == 0)
+                {
+                    std::cout << "Erasing thread" << std::endl;
+                    threadHolder.erase(threadHolder.begin() + i);
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            i = threadHolder.size();
+        }
         if(newSd == -1)
         {
             continue;
         }
-        pthread_create(&tid[i], NULL, serviceConnection, (void*)&newSd); //need to figure out how to start a thread from a class memeber function
+        pthread_t tid;
+        pthread_create(&tid, NULL, serviceConnection, (void*)&newSd); //need to figure out how to start a thread from a class memeber function
+        threadHolder.push_back(tid);
         i++;
-        if(i >= 5)
-        {
-            i = 0;
-            while(i < 5)
-            {
-                pthread_join(tid[i], NULL);
-                i++;
-            }
-            i = 0;
-        }
+        std::cout << threadHolder.size() << std::endl;
     }
     
     
@@ -124,18 +136,18 @@ void* threadConnection(void* newSd)
             continue;
         }
         pthread_mutex_lock(&lock);
-        cout << "read " << bytesRead << " bytes" << endl;
-        cout << "Received: " << buf << endl;
+        std::cout << "read " << bytesRead << " bytes" << std::endl;
+        std::cout << "Received: " << buf << std::endl;
         if(strcmp(buf, "exit") == 0 || strcmp(buf, "exit\r\n") == 0)
         {
-            cout << "Closing connection" << endl;
+            std::cout << "Closing connection" << std::endl;
             close(fd);
             pthread_mutex_unlock(&lock);
             break;
         }
         else if(strcmp(buf, "HELP\r\n") == 0 || strcmp(buf, "HELP") == 0)
         {
-            cout << "Port scanner possibly found." << endl;
+            std::cout << "Port scanner possibly found." << std::endl;
             write(fd, "Piss Off\n", 10);
         }
         memset(buf, 0, sizeof(buf));
@@ -151,33 +163,53 @@ void* serviceConnection(void* newSd)
     int fd = *(int*) newSd;
     player* p;
     char buf[BUF_SIZE];
+    timeval tv;
+    gettimeofday(&tv, NULL);
+    timeval lap;
     while(true)
     {
         int bytesRead = read(fd, buf, BUF_SIZE);
+        if(bytesRead == 0 || bytesRead == -1)
+        {
+            gettimeofday(&lap, NULL);
+            if(lap.tv_sec - tv.tv_sec > 10)
+            {
+                std::cout << "Connection timed out. Closing connection." << std::endl;
+                close(fd);
+                delete p;
+                return NULL;
+            }
+        }
         switch(buf[0])
         {
             case 'R':
-                cout << buf << endl;
-                cout << "Registering Player" << endl;
+                gettimeofday(&tv, NULL);
+                std::cout << buf << std::endl;
+                std::cout << "Registering Player" << std::endl;
                 p = registration(buf, fd);
                 break;
             case 'L':
+                gettimeofday(&tv, NULL);
                 listLobbies(p);
                 break;
             case 'C':
+                gettimeofday(&tv, NULL);
                 createLobby(buf);
                 break;
             case 'I':
+                gettimeofday(&tv, NULL);
                 lobbyInfo(buf);
                 break;
             case 'J':
+                gettimeofday(&tv, NULL);
                 joinLobby(buf);
                 break;
             case 'E':
+                gettimeofday(&tv, NULL);
                 exitLobby(buf);
                 break;
             case 'Q':
-                cout << "Connection Closing" << endl;
+                std::cout << "Connection Closing" << std::endl;
                 close(fd);
                 delete p;
                 return NULL;
@@ -195,7 +227,7 @@ void addLobby(lobby* l)
 player* registration(char* buf, int& fd)
 {
     player* p;
-    string message;
+    std::string message;
     char* token;
     token = strtok(buf, "R");
     if(strlen(token) < 3 || strlen(token) > 10)
@@ -216,16 +248,16 @@ void listLobbies(player* p)
 {
     if(p == NULL)
     {
-        cout << "Client connection is trying to access lobby services before registration" << endl;
+        std::cout << "Client connection is trying to access lobby services before registration" << std::endl;
         return;
     }
-    string message = "L";
+    std::string message = "L";
     for(lobby* l: lobbies)
     {
-        message.append(to_string(l->getLobbyId()));
+        message.append(std::to_string(l->getLobbyId()));
         message.append(l->getLobbyName());
-        message.append(to_string(l->getLobbyNumPlayers()));
-        message.append(to_string(l->getLobbySize()));
+        message.append(std::to_string(l->getLobbyNumPlayers()));
+        message.append(std::to_string(l->getLobbySize()));
         message.append("\n");
     }
     write(p->getPlayerSocket(), message.c_str(), message.length());

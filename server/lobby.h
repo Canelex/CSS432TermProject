@@ -5,28 +5,28 @@
 #include <iostream>
 #include <vector>
 #include "player.h"
-using namespace std;
+//using namespace std;
 
 class lobby
 {
 public:
-    vector<player> getPlayers();
-    string getLobbyName();
+    std::vector<player> getPlayers();
+    std::string getLobbyName();
     int getLobbyId();
     int getLobbySize();
     int getLobbyNumPlayers();
 
     void setLobbySize(int size);
-    void setLobbyName(string name);
+    void setLobbyName(std::string name);
     void setLobbyId(int Id);
     void addPlayers(player newPlayer);
     void update();
 
 
 private:
-    string lobbyName;
+    std::string lobbyName;
     int lobbyId;
-    vector<player> players;
+    std::vector<player> players;
     int lobbySize = 0;
     bool startGame;
 

@@ -1,6 +1,6 @@
 #include "player.h"
 
-string player::getPlayerName()
+std::string player::getPlayerName()
 {
     return this->name;
 }
@@ -25,7 +25,7 @@ void* player::getPlayerColor()
     return this->color;
 }
 
-void player::setName(string name)
+void player::setName(std::string name)
 {
     this->name = name;
 }

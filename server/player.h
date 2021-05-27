@@ -4,18 +4,18 @@
 #include <string>
 #include <iostream>
 
-using namespace std;
+//using namespace std;
 
 class player
 {
 public:
-    string getPlayerName();
+    std::string getPlayerName();
     int getPlayerSocket();
     int getPlayerXPos();
     int getPlayerYPos();
     void* getPlayerColor();
 
-    void setName(string name);
+    void setName(std::string name);
     void setSocket(int socket);
     void setXPos(int x);
     void setYPos(int y);
@@ -23,7 +23,7 @@ public:
 
 
 private:
-    string name = "";
+    std::string name = "";
     int sockFd = -1;
     int x = 0;
     int y = 0;

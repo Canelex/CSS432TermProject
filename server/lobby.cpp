@@ -1,11 +1,11 @@
 #include "lobby.h"
 
-vector<player> lobby::getPlayers()
+std::vector<player> lobby::getPlayers()
 {
     return this->players;
 }
 
-string lobby::getLobbyName()
+std::string lobby::getLobbyName()
 {
     return this->lobbyName;
 }
@@ -31,7 +31,7 @@ void lobby::setLobbySize(int size)
     return;
 }
 
-void lobby::setLobbyName(string name)
+void lobby::setLobbyName(std::string name)
 {
     this->lobbyName = name;
 }
