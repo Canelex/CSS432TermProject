@@ -48,7 +48,7 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         }
 
         // Create some screens
-        screens.push_back(new RegisterScreen(renderer));
+        screens.push_back(new RegisterScreen(this, renderer));
 
         // Set the active screen index
         activeScreenIndex = 0;
@@ -57,9 +57,6 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         for (int i = 0; i < screens.size(); i++) {
             screens[i]->init();
         }
-
-        // Connect to server
-        netman.connectToServer();
 
         running = true;
     }

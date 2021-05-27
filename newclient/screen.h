@@ -9,8 +9,12 @@
 */
 
 #pragma once
+#include "app.h"
 #include "SDL.h"
 #include "SDL_image.h"
+
+// Define app ahead of time
+class App;
 
 class Screen
 {
@@ -19,7 +23,8 @@ public:
     * This constructor just stores a reference to the renderer
     * for later (rendering).
     */
-    Screen(SDL_Renderer* renderer) {
+    Screen(App* app, SDL_Renderer* renderer) {
+        this->app = app;
         this->renderer = renderer;
     }
 
@@ -50,6 +55,9 @@ public:
     */
     virtual void render() = 0;
 protected:
+    // Reference to app object
+    App* app;
+
     // Reference to renderer object
     SDL_Renderer* renderer;
 };

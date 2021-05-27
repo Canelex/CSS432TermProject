@@ -1,6 +1,5 @@
 #pragma once
-#include "screen.h"
-#include "SDL_ttf.h"
+#include "app.h"
 #include <string>
 
 class RegisterScreen : public Screen
@@ -10,7 +9,7 @@ public:
     * This constructor just stores a reference to the renderer
     * for later (rendering).
     */
-    RegisterScreen(SDL_Renderer* renderer) : Screen(renderer) {}
+    RegisterScreen(App* app, SDL_Renderer* renderer) : Screen(app, renderer) {}
 
     /*
     * This method is called when the game is first created. It
@@ -43,7 +42,6 @@ private:
     // Background
     SDL_Rect rectBG;
     SDL_Texture* texBG;
-    TTF_Font* font;
     std::string username;
 
     // Username Rect
