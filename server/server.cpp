@@ -88,7 +88,7 @@ int main ()
         sockaddr_in newsock;   // place to store parameters for the new connection
         socklen_t newsockSize = sizeof(newsock);
         int newSd = accept4(serverSd, (sockaddr *)&newsock, &newsockSize, SOCK_NONBLOCK);  // grabs the new connection and assigns it a temporary socket
-        if(i >= 5)
+        if(threadHolder.size() > 0)
         {
             i = 0;
             while(i < threadHolder.size())
