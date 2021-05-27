@@ -12,7 +12,7 @@
 #include "texman.h"
 #include "netman.h"
 #include "screen_register.h"
-#include "SDL_ttf.h"
+#include "screen_lobbies.h"
 
 /* Constructor and destructor */
 App::App() {}
@@ -49,6 +49,7 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
 
         // Create some screens
         screens.push_back(new RegisterScreen(this, renderer));
+        screens.push_back(new LobbiesScreen(this, renderer));
 
         // Set the active screen index
         activeScreenIndex = 0;

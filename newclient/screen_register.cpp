@@ -1,5 +1,4 @@
 #include "screen_register.h"
-#include "texman.h"
 #include <iostream>
 #include <string>
 using namespace std;
@@ -119,23 +118,25 @@ void RegisterScreen::render() {
     // Render the textbox
     SDL_RenderCopy(renderer, texName, NULL, &rectName);
 
-    //this opens a font style and sets a size
-    if (username.size() > 0) {
-        // Get text texture
-        SDL_Color textColor = { 255, 255, 255 };
-        SDL_Texture* text = TexMan::LoadFontTexture(username.c_str(), textColor, 24, renderer);
-
-        // Render it
-        int text_width, text_height;
-        SDL_QueryTexture(text, NULL, NULL, &text_width, &text_height);
-        SDL_Rect textRect;
-        textRect.x = rectName.x + (rectName.w - text_width) / 2;
-        textRect.y = rectName.y + (rectName.h - text_height) / 2;
-        textRect.w = text_width;
-        textRect.h = text_height;
-        SDL_RenderCopy(renderer, text, NULL, &textRect);
-        SDL_DestroyTexture(text);
+    string nameText = username;
+    for (int i = nameText.size(); i < 3; i++) {
+        nameText += "_";
     }
+
+    // Get text texture
+    SDL_Color textColor = { 255, 255, 255 };
+    SDL_Texture* text = TexMan::LoadFontTexture(nameText.c_str(), textColor, 24, renderer);
+
+    // Render it
+    int text_width, text_height;
+    SDL_QueryTexture(text, NULL, NULL, &text_width, &text_height);
+    SDL_Rect textRect;
+    textRect.x = rectName.x + (rectName.w - text_width) / 2;
+    textRect.y = rectName.y + (rectName.h - text_height) / 2;
+    textRect.w = text_width;
+    textRect.h = text_height;
+    SDL_RenderCopy(renderer, text, NULL, &textRect);
+    SDL_DestroyTexture(text);
 
     // Render the button
     SDL_RenderCopy(renderer, texBtn, NULL, &rectBtn);
