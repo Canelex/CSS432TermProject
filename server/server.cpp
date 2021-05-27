@@ -27,9 +27,9 @@ void* serviceConnection(void* newSd);
 
 void addLobby(lobby* l);
 
-player* registration(char* buf, int fd);
+player* registration(char* buf, int& fd);
 
-void listLobbies();
+void listLobbies(player* p);
 
 void createLobby(char* buf);
 
@@ -41,21 +41,21 @@ void exitLobby(char* buf);
 
 int main () 
 {
+    lobby* lobby0 = new lobby();
     lobby* lobby1 = new lobby();
     lobby* lobby2 = new lobby();
-    lobby* lobby3 = new lobby();
-    lobby1->setLobbySize(2);
-    lobby1->setLobbyName("Preset 1 v 1 Match");
+    lobby0->setLobbySize(2);
+    lobby0->setLobbyName("Preset 1 v 1 Match");
+    lobby0->setLobbyId(0);
+    lobby1->setLobbySize(3);
+    lobby1->setLobbyName("Preset 1 v 1 v 1 Match");
     lobby1->setLobbyId(1);
-    lobby2->setLobbySize(3);
-    lobby2->setLobbyName("Preset 1 v 1 v 1 Match");
+    lobby2->setLobbySize(4);
+    lobby2->setLobbyName("Preset 1 v 1 v 1 v 1 Match");
     lobby2->setLobbyId(2);
-    lobby3->setLobbySize(4);
-    lobby3->setLobbyName("Preset 1 v 1 v 1 v 1 Match");
-    lobby3->setLobbyId(3);
+    addLobby(lobby0);
     addLobby(lobby1);
     addLobby(lobby2);
-    addLobby(lobby3);
 
     // Create the socket
     int server_port = 12345;
@@ -153,14 +153,16 @@ void* serviceConnection(void* newSd)
     char buf[BUF_SIZE];
     while(true)
     {
-        read(fd, buf, BUF_SIZE);
+        int bytesRead = read(fd, buf, BUF_SIZE);
         switch(buf[0])
         {
             case 'R':
+                cout << buf << endl;
+                cout << "Registering Player" << endl;
                 p = registration(buf, fd);
                 break;
             case 'L':
-                listLobbies();
+                listLobbies(p);
                 break;
             case 'C':
                 createLobby(buf);
@@ -175,9 +177,12 @@ void* serviceConnection(void* newSd)
                 exitLobby(buf);
                 break;
             case 'Q':
-                close(p->getPlayerSocket());
+                cout << "Connection Closing" << endl;
+                close(fd);
+                delete p;
                 return NULL;
         }
+        memset(buf, '\0', sizeof(buf));
     }
     return NULL;
 }
@@ -187,25 +192,36 @@ void addLobby(lobby* l)
     lobbies.push_back(l);
 }
 
-player* registration(char* buf, int fd)
+player* registration(char* buf, int& fd)
 {
     char* token;
     token = strtok(buf, "R");
-    token = strtok(NULL, "\0");
     player* p = new player();
     p->setName(token);
     p->setSocket(fd);
-    string message = "Registration Success!!!";
+    string message = "Registration Success!!!\n";
     write(p->getPlayerSocket(), message.c_str(), message.length());
     return p;
 }
 
-void listLobbies()
+void listLobbies(player* p)
 {
+    if(p == NULL)
+    {
+        cout << "Client connection is trying to access lobby services before registration" << endl;
+        return;
+    }
+    string message = "L";
     for(lobby* l: lobbies)
     {
-        
+        message.append(to_string(l->getLobbyId()));
+        message.append(l->getLobbyName());
+        message.append(to_string(l->getLobbyNumPlayers()));
+        message.append(to_string(l->getLobbySize()));
     }
+    message.append("\n");
+    write(p->getPlayerSocket(), message.c_str(), message.length());
+    return;
 }
 
 void createLobby(char* buf)

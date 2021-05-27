@@ -5,6 +5,11 @@ vector<player> lobby::getPlayers()
     return this->players;
 }
 
+string lobby::getLobbyName()
+{
+    return this->lobbyName;
+}
+
 int lobby::getLobbyId()
 {
     return this->lobbyId;

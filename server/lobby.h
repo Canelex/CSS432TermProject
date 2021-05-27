@@ -11,6 +11,7 @@ class lobby
 {
 public:
     vector<player> getPlayers();
+    string getLobbyName();
     int getLobbyId();
     int getLobbySize();
     int getLobbyNumPlayers();
