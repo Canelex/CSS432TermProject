@@ -56,7 +56,6 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
                 // Dequeue front packet
                 string p = outgoing->front();
                 outgoing->erase(outgoing->begin());
-                cout << "Preparing packet " << p << endl;
 
                 // Send the data
                 send(sock, p.c_str(), p.length(), 0);
@@ -67,7 +66,6 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
                 int bytes = recv(sock, buffer, sizeof(buffer), 0);
                 buffer[bytes] = 0;
                 incoming->push_back(string(buffer));
-                cout << buffer << endl;
             }
         }
     }
@@ -108,7 +106,6 @@ NetMan::~NetMan() {
 */
 void NetMan::dispatch(string packet) {
     outgoing->push_back(packet);
-    cout << "Queueing packet " << packet << endl;
 }
 
 /**

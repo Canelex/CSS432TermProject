@@ -102,10 +102,6 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void RegisterScreen::handlePacket(string packet) {
-    if (packet.empty()) {
-        return; // empty packet, dont bother
-    }
-    
     switch (packet.at(0)) {
         case 'R':
             cout << packet << endl;

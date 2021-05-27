@@ -13,6 +13,9 @@ void LobbiesScreen::init() {
     rectBG.y = 0;
     rectBG.w = 900;
     rectBG.h = 600;
+
+    // Send a list lobbies
+    app->getNetworkManager().dispatch("L");
 }
 
 /**
@@ -36,7 +39,11 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void LobbiesScreen::handlePacket(string packet) {
-
+    switch (packet.at(0)) {
+    case 'L':
+        cout << packet << endl;
+        break;
+    }
 }
 
 /**

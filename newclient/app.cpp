@@ -51,16 +51,10 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         }
 
         // Create some screens
+        activeScreenIndex = -1;
         screens.push_back(new RegisterScreen(this, renderer));
         screens.push_back(new LobbiesScreen(this, renderer));
-
-        // Set the active screen index
-        activeScreenIndex = 0;
-
-        // Initialize each screen
-        for (int i = 0; i < screens.size(); i++) {
-            screens[i]->init();
-        }
+        openScreen(0);
 
         running = true;
     }
@@ -94,8 +88,9 @@ void App::handleEvents() {
 void App::handlePackets() {
     while (netman.hasNextPacket()) {
         string p = netman.poll();
-        cout << "polled " << p << endl;
-        screens[activeScreenIndex]->handlePacket(p);
+        if (p.length() > 0) {
+            screens[activeScreenIndex]->handlePacket(p);
+        }
     }
 }
 
@@ -144,8 +139,15 @@ void App::clean() {
 * the activeScreenIndex field
 */
 void App::openScreen(int id) {
+    if (activeScreenIndex > 0) {
+        screens[activeScreenIndex]->clean();
+    }
+
     // Update the index
     activeScreenIndex = id;
+
+    // Initialize the screen
+    screens[activeScreenIndex]->init();
 }
 
 /**
