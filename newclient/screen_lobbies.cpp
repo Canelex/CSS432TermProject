@@ -28,9 +28,15 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
             return;
         }
 
-        // Get the server list
-        app->getNetMan().getServerList();
     }
+}
+
+/**
+* This method is called whenever a packet is received from
+* the app.
+*/
+void LobbiesScreen::handlePacket(string packet) {
+
 }
 
 /**
@@ -53,5 +59,12 @@ void LobbiesScreen::render() {
     SDL_RenderCopy(renderer, texBG, NULL, &rectBG);
 
 
+
+}
+
+/**
+* This method is called whenever the screen needs to be cleaned
+*/
+void LobbiesScreen::clean() {
 
 }

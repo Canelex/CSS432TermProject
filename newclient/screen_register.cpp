@@ -91,11 +91,31 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
             return;
         }
 
-        bool res = app->getNetMan().sendRegister(username);
-        if (res) {
-            // Open screen #1
-            app->openScreen(1);
-        }
+        // Dispatch a register packet
+        string packet = "R" + username;
+        app->getNetworkManager().dispatch(packet);
+    }
+}
+
+/**
+* This method is called whenever a packet is received from
+* the app.
+*/
+void RegisterScreen::handlePacket(string packet) {
+    if (packet.empty()) {
+        return; // empty packet, dont bother
+    }
+    
+    switch (packet.at(0)) {
+        case 'R':
+            cout << packet << endl;
+            if (packet == "RT\n") {
+                app->openScreen(1);
+            }
+            if (packet == "RF\n") {
+                username = "";
+            }
+            break;
     }
 }
 
@@ -143,4 +163,11 @@ void RegisterScreen::render() {
 
     // Render the button
     SDL_RenderCopy(renderer, texBtn, NULL, &rectBtn);
+}
+
+/**
+* This method is called whenever the screen needs to be cleaned
+*/
+void RegisterScreen::clean() {
+
 }

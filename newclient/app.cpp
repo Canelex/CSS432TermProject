@@ -14,10 +14,13 @@
 #include "screen_register.h"
 #include "screen_lobbies.h"
 
-/* Constructor and destructor */
-App::App() {}
-
-App::~App() {}
+/**
+* Constructor accepts a server address and a port, which it eventually
+* passes to the network manager (which uses a thread to do networking)
+*/
+App::App(const char* address, int port) {
+    netman = NetMan(address, port);
+}
 
 /* Initialization function for starting the game */
 void App::init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen) {
@@ -47,9 +50,6 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
             cout << "Font initialized!" << endl;
         }
 
-        // Connect to server
-        netman.connectToServer();
-
         // Create some screens
         screens.push_back(new RegisterScreen(this, renderer));
         screens.push_back(new LobbiesScreen(this, renderer));
@@ -75,15 +75,27 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
 */
 void App::handleEvents() {
     SDL_Event event;
-    SDL_PollEvent(&event);
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+        case SDL_QUIT:
+            running = false;
+            break;
+        default:
+            screens[activeScreenIndex]->handleEvent(event);
+            break;
+        }
+    }
+}
 
-    switch (event.type) {
-    case SDL_QUIT:
-        running = false;
-        break;
-    default:
-        screens[activeScreenIndex]->handleEvent(event);
-        break;
+/**
+* This funciton handles all packets from the network manager to the client.
+* It is called by the update function.
+*/
+void App::handlePackets() {
+    while (netman.hasNextPacket()) {
+        string p = netman.poll();
+        cout << "polled " << p << endl;
+        screens[activeScreenIndex]->handlePacket(p);
     }
 }
 
@@ -92,6 +104,9 @@ void App::handleEvents() {
 * the main application loop.
 */
 void App::update() {
+    // Dequeue some packets
+    handlePackets();
+
     screens[activeScreenIndex]->update();
 }
 
@@ -143,6 +158,6 @@ bool App::isRunning() const {
 /**
 * Returns the network manager
 */
-NetMan& App::getNetMan() {
+NetMan& App::getNetworkManager() {
     return netman;
 }

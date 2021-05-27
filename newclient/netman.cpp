@@ -1,37 +1,29 @@
-
 #include "netman.h"
-#define PORT 12345
+#include <thread>
 
-NetMan::NetMan() {
+/**
+* Asynchronous packet handler. Constantly reads from socket,
+* parses packets, and adds them to the incoming packet queue.
+*/
+void packetHandler(const char* address, int port, vector<string>* incoming, vector<string>* outgoing) {
 
-}
-
-NetMan::~NetMan() {
-
-}
-
-void printHello(void* test) {
-
-}
-
-void NetMan::connectToServer() {
-    // Init WINSOCK
+    // Initialize WINSOCK
     WSAData wsaData;
     WORD DllVersion = MAKEWORD(2, 1);
     if (WSAStartup(DllVersion, &wsaData) != 0) {
-        std::cout << "Failed to setup winsock" << std::endl;
+        std::cerr << "Failed to setup winsock" << std::endl;
         return;
     }
 
-    // Create Socket
-    sock = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
+    // Create Socket object
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
     if (sock < 0) {
         std::cout << "Failed to create socket" << std::endl;
         return;
     }
 
-    // Get Server Info
-    HOSTENT* host = gethostbyname("50.35.123.243");
+    // Resolve hostname
+    HOSTENT* host = gethostbyname(address);
     if (host == nullptr) {
         std::cout << "Failed to resolve hostname" << std::endl;
         return;
@@ -40,57 +32,102 @@ void NetMan::connectToServer() {
     // Create sockaddr struct
     SOCKADDR_IN sin;
     ZeroMemory(&sin, sizeof(sin));
-    sin.sin_port = htons(PORT);
+    sin.sin_port = htons(port);
     sin.sin_family = AF_INET; // IPv4
     memcpy(&sin.sin_addr.S_un.S_addr, host->h_addr_list[0], sizeof(sin.sin_addr.S_un.S_addr));
 
-    // Connect to server
-    if (connect(sock, (const sockaddr*)&sin, sizeof(sin)) != 0) {
-        std::cout << "Failed to connect to server" << std::endl;
-        std::cout << WSAGetLastError() << endl;
-        return;
-    }
+    // Until the program ends
+    while (true) {
 
-    cout << "Connected to server" << endl;
+        // Try to connect to the server
+        if (connect(sock, (sockaddr*)&sin, sizeof(sin)) != 0) {
+            std::cout << "Failed to connect to server: " << WSAGetLastError() << std::endl;
+            this_thread::sleep_for(chrono::seconds(3)); // retry in 3 seconds
+            continue;
+        }
+
+        cout << "Connected to server" << endl;
+        
+
+        // Success! Let's keep reading packets
+        while (true) {
+            // Are there packets to send?
+            if (!outgoing->empty()) {
+                // Dequeue front packet
+                string p = outgoing->front();
+                outgoing->erase(outgoing->begin());
+                cout << "Preparing packet " << p << endl;
+
+                // Send the data
+                send(sock, p.c_str(), p.length(), 0);
+                cout << "Sent packet " << p << endl;
+
+                // Read incoming packets
+                char buffer[256];
+                int bytes = recv(sock, buffer, sizeof(buffer), 0);
+                buffer[bytes] = 0;
+                incoming->push_back(string(buffer));
+                cout << buffer << endl;
+            }
+        }
+    }
 }
 
-bool NetMan::sendRegister(const string& username) {
-    
-    char buffer[1024];
 
-    string msg = "R" + username;
-    cout << "Sending " << msg << endl;
-    send(sock, msg.c_str(), msg.size(), 0);
-    int res = recv(sock, buffer, 1024, 0);
+/* Default constructor */
+NetMan::NetMan() {
 
-    cout << "Read " << res << " bytes." << endl;
-
-    if (res < 0) {
-        cout << "Failed to read response to register." << endl;
-        return false;
-    }
-
-    buffer[res] = '\0';
-    cout << "Registration response: " << buffer << endl;
-    return true;
 }
 
-bool NetMan::getServerList() {
-    char buffer[1024];
+/**
+* Parameterized constructor that sets up socket and starts
+* packet handler thread
+*/
+NetMan::NetMan(const char* address, int port) {
+    // Create queues
+    incoming = new vector<string>();
+    outgoing = new vector<string>();
 
-    string msg = "L";
-    cout << "Sending " << msg << endl;
-    send(sock, msg.c_str(), msg.size(), 0);
-    int res = recv(sock, buffer, 1024, 0);
+    // Create a thread
+    thread t(&packetHandler, address, port, incoming, outgoing);
 
-    cout << "Read " << res << " bytes." << endl;
+    // Let the thread run on its own
+    t.detach();
+}
 
-    if (res < 0) {
-        cout << "Failed to read response to serverlist." << endl;
-        return false;
+/**
+* Destructor for network manager
+*/
+NetMan::~NetMan() {
+
+}
+
+/**
+* Sends a packet to the server but does not wait for answer.
+* Response will be picked up by the thread.
+*/
+void NetMan::dispatch(string packet) {
+    outgoing->push_back(packet);
+    cout << "Queueing packet " << packet << endl;
+}
+
+/**
+* Returns whether there is an incoming packet sitting in
+* the queue
+*/
+bool NetMan::hasNextPacket() {
+    return !incoming->empty();
+}
+
+/**
+ * Dequeues the most recent incoming packet and returns it.
+ */
+string NetMan::poll() {
+    if (incoming->empty()) {
+        return "";
     }
 
-    buffer[res] = '\0';
-    cout << "Serverlist response: " << buffer << endl;
-    return true;
+    string front = incoming->front();
+    incoming->erase(incoming->begin());
+    return front;
 }

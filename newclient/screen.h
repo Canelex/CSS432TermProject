@@ -13,6 +13,8 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "texman.h"
+#include <string>
+using namespace std;
 
 // Define app ahead of time
 class App;
@@ -43,6 +45,12 @@ public:
     virtual void handleEvent(SDL_Event& event) = 0;
 
     /**
+    * This method is called whenever a packet is received from 
+    * the app.
+    */
+    virtual void handlePacket(string packet) = 0;
+
+    /**
     * If there is any kind of logic that needs to run per tick,
     * this is the place to do it. This function fires 30 times
     * a second (once per frame) when the screen is active
@@ -55,6 +63,12 @@ public:
     * this function only needs to render its components
     */
     virtual void render() = 0;
+
+    /**
+    * This method is called whenever the screen needs to be cleaned
+    */
+    virtual void clean() = 0;
+
 protected:
     // Reference to app object
     App* app;

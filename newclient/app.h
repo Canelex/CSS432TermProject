@@ -22,9 +22,11 @@ class Screen;
 class App
 {
 public:
-    /* Constructor and destructor */
-    App();
-    ~App();
+    /**
+    * Constructor accepts a server address and a port, which it eventually
+    * passes to the network manager (which uses a thread to do networking)
+    */
+    App(const char* address, int port);
 
     /* Initialization function for starting the game */
     void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
@@ -34,6 +36,12 @@ public:
     * tick by the main application loop.
     */
     void handleEvents();
+
+    /**
+    * This funciton handles all packets from the network manager to the client.
+    * It is called by the update function.
+    */
+    void handlePackets();
 
     /**
     * This function handles all the game logic. It is called every tick by
@@ -67,7 +75,7 @@ public:
     /**
     * Returns the network manager
     */
-    NetMan& getNetMan();
+    NetMan& getNetworkManager();
 
 private:
     // Is the game running?

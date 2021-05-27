@@ -15,22 +15,49 @@
 #include <Windows.h>
 #include <string>
 #include <iostream>
+#include <vector>
+
 using namespace std;
 
 class NetMan
 {
 public:
+    /* Default constructor */
     NetMan();
 
+    /**
+    * Parameterized constructor that sets up socket and starts
+    * packet handler thread
+    */
+    NetMan(const char* address, int port);
+
+    /**
+    * Destructor for network manager
+    */
     ~NetMan();
 
-    void connectToServer();
+    /**
+    * Sends a packet to the server but does not wait for answer.
+    * Response will be picked up by the thread.
+    */
+    void dispatch(string packet);
 
-    bool sendRegister(const string &username);
+    /** 
+    * Returns whether there is an incoming packet sitting in 
+    * the queue 
+    */
+    bool hasNextPacket();
 
-    bool getServerList();
+    /**
+     * Dequeues the most recent incoming packet and returns it.
+     */
+    string poll();
 
 private:
-    SOCKET sock;
+    // List of packets to send
+    vector<string>* outgoing;
+
+    // List of packets received
+    vector<string>* incoming;
 };
 
