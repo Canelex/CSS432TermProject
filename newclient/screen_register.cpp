@@ -55,7 +55,7 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
 
         // Name is too long
         if (username.size() >= 10) {
-            //return;
+            return;
         }
 
         // Valid key
@@ -74,7 +74,7 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
 
         // Make sure name is valid
         if (username.size() < 3) {
-            //return;
+            return;
         }
 
         // Was it in the box?
@@ -133,6 +133,10 @@ void RegisterScreen::render() {
 
     // Render the background
     SDL_RenderCopy(renderer, texBG, NULL, &rectBG);
+
+    SDL_SetRenderDrawColor(renderer, 17, 76, 122, 255);
+    SDL_Rect rectScroll = { 300, 150, 300, 300 };
+    SDL_RenderFillRect(renderer, &rectScroll);
 
     // Render the textbox
     SDL_RenderCopy(renderer, texName, NULL, &rectName);

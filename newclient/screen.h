@@ -14,6 +14,7 @@
 #include "SDL_image.h"
 #include "texman.h"
 #include <string>
+#include <vector>
 using namespace std;
 
 // Define app ahead of time

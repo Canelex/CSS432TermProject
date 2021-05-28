@@ -1,6 +1,11 @@
 #pragma once
 #include "screen.h"
 
+struct Lobby {
+    int id;
+    string name;
+};
+
 class LobbiesScreen : public Screen
 {
 public:
@@ -52,5 +57,19 @@ private:
     // Background objects
     SDL_Rect rectBG;
     SDL_Texture* texBG;
+
+    // Back button
+    SDL_Rect rectBack;
+    SDL_Texture* texBack;
+
+    // List of servers
+    SDL_Texture* texLobby;
+    vector<Lobby> lobbies;
+    int scrollY;
+    float scrollVY;
+
+    // Custom Lobby button
+    SDL_Texture* texCustom;
+    SDL_Rect rectCustom;
 };
 

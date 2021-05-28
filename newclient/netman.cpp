@@ -15,13 +15,6 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
         return;
     }
 
-    // Create Socket object
-    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
-    if (sock < 0) {
-        std::cout << "Failed to create socket" << std::endl;
-        return;
-    }
-
     // Resolve hostname
     HOSTENT* host = gethostbyname(address);
     if (host == nullptr) {
@@ -38,6 +31,13 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
 
     // Until the program ends
     while (true) {
+
+        // Create Socket object
+        SOCKET sock = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
+        if (sock < 0) {
+            std::cout << "Failed to create socket" << std::endl;
+            return;
+        }
 
         // Try to connect to the server
         if (connect(sock, (sockaddr*)&sin, sizeof(sin)) != 0) {
@@ -64,6 +64,15 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
                 // Read incoming packets
                 char buffer[256];
                 int bytes = recv(sock, buffer, sizeof(buffer), 0);
+                
+                // Connection is closed
+                if (bytes == 0) {
+                    outgoing->insert(outgoing->begin(), p); // reinsert packet
+                    cout << "Disconnected from socket. Retrying...";
+                    closesocket(sock);
+                    break;
+                }
+
                 buffer[bytes] = 0;
                 incoming->push_back(string(buffer));
             }
