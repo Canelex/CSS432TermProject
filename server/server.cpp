@@ -32,7 +32,7 @@ player* registration(char* buf, int& fd);
 
 void listLobbies(player* p);
 
-void createLobby(char* buf);
+void createLobby(char* buf, player* p);
 
 void lobbyInfo(char* buf);
 
@@ -172,9 +172,12 @@ void* serviceConnection(void* newSd)
         if(bytesRead == 0 || bytesRead == -1)
         {
             gettimeofday(&lap, NULL);
-            if(lap.tv_sec - tv.tv_sec > 10)
+            if(lap.tv_sec - tv.tv_sec > 300)
             {
                 std::cout << "Connection timed out. Closing connection." << std::endl;
+                memset(buf, '\0', BUF_SIZE);
+                buf[0] = 'Q';
+                write(fd, buf, sizeof('Q'));
                 close(fd);
                 delete p;
                 return NULL;
@@ -194,7 +197,7 @@ void* serviceConnection(void* newSd)
                 break;
             case 'C':
                 gettimeofday(&tv, NULL);
-                createLobby(buf);
+                createLobby(buf, p);
                 break;
             case 'I':
                 gettimeofday(&tv, NULL);
@@ -246,12 +249,13 @@ player* registration(char* buf, int& fd)
 
 void listLobbies(player* p)
 {
+    std::string message;
     if(p == NULL)
     {
         std::cout << "Client connection is trying to access lobby services before registration" << std::endl;
         return;
     }
-    std::string message = "L";
+    message = "L";
     for(lobby* l: lobbies)
     {
         message.append(std::to_string(l->getLobbyId()));
@@ -264,9 +268,44 @@ void listLobbies(player* p)
     return;
 }
 
-void createLobby(char* buf)
+void createLobby(char* buf, player* p)
 {
-
+    if(p == NULL)
+    {
+        std::cout << "Client connection is trying to access lobby services before registration" << std::endl;
+        return;
+    }
+    std::string message;
+    char* token = strtok(buf, " ");
+    token = strtok(NULL, " ");
+    if(token == NULL)
+    {
+        std::cout << "Name token failed" << std::endl;
+        message = "CF";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    std::cout << token << std::endl;
+    std::string name = token;
+    token = strtok(NULL, " ");
+    if(token == NULL)
+    {
+        std::cout << "Size token failed" << std::endl;
+        message = "CF";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    int size = atoi(token);
+    lobby* l = new lobby();
+    l->setLobbyName(name);
+    l->setLobbySize(size);
+    l->setLobbyId(20); //placeholder until can add code for random two digit integer
+    l->addPlayer(p);
+    lobbies.push_back(l);
+    message = "CT ";
+    message += std::to_string(l->getLobbyId());
+    write(p->getPlayerSocket(), message.c_str(), message.length());
+    return;
 }
 
 void lobbyInfo(char* buf)
