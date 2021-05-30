@@ -85,9 +85,8 @@ int main ()
     int i = 0;
     while(true)
     {
-        sockaddr_in newsock;   // place to store parameters for the new connection
-        socklen_t newsockSize = sizeof(newsock);
-        int newSd = accept4(serverSd, (sockaddr *)&newsock, &newsockSize, SOCK_NONBLOCK);  // grabs the new connection and assigns it a temporary socket
+        //If threadHolder contains threads, then try to join as many as possible in order to keep the number of open threads low
+        //This also helps to make sure disconnected clients aren't taking up space in the server
         if(threadHolder.size() > 0)
         {
             i = 0;
@@ -106,6 +105,9 @@ int main ()
             }
             i = threadHolder.size();
         }
+        sockaddr_in newsock;   // place to store parameters for the new connection
+        socklen_t newsockSize = sizeof(newsock);
+        int newSd = accept4(serverSd, (sockaddr *)&newsock, &newsockSize, SOCK_NONBLOCK);  // grabs the new connection and assigns it a temporary socket
         if(newSd == -1)
         {
             continue;
@@ -187,7 +189,13 @@ void* serviceConnection(void* newSd)
         {
             case 'R':
                 gettimeofday(&tv, NULL);
-                std::cout << buf << std::endl;
+                if(p != NULL)
+                {
+                    std::cout << "Client trying to double register a player" << std::endl;
+                    std::string message = "RF\n";
+                    write(p->getPlayerSocket(), message.c_str(), message.length());
+                    break;
+                }
                 std::cout << "Registering Player" << std::endl;
                 p = registration(buf, fd);
                 break;
@@ -232,13 +240,15 @@ player* registration(char* buf, int& fd)
     player* p;
     std::string message;
     char* token;
-    token = strtok(buf, "R");
+    token = strtok(buf, "/");
+    token = strtok(NULL, "\r\n");
     if(strlen(token) < 3 || strlen(token) > 10)
     {
         message = "RF\n";
         write(fd, message.c_str(), message.length());
         return NULL;
     }
+    std::cout << token << std::endl;
     p = new player();
     p->setName(token);
     p->setSocket(fd);
@@ -249,18 +259,20 @@ player* registration(char* buf, int& fd)
 
 void listLobbies(player* p)
 {
-    std::string message;
     if(p == NULL)
     {
         std::cout << "Client connection is trying to access lobby services before registration" << std::endl;
         return;
     }
-    message = "L";
+    std::string message = "L/";
     for(lobby* l: lobbies)
     {
         message.append(std::to_string(l->getLobbyId()));
+        message += "/";
         message.append(l->getLobbyName());
+        message += "/";
         message.append(std::to_string(l->getLobbyNumPlayers()));
+        message += "/";
         message.append(std::to_string(l->getLobbySize()));
         message.append("\n");
     }
@@ -276,22 +288,22 @@ void createLobby(char* buf, player* p)
         return;
     }
     std::string message;
-    char* token = strtok(buf, " ");
-    token = strtok(NULL, " ");
+    char* token = strtok(buf, "/");
+    token = strtok(NULL, "/");
     if(token == NULL)
     {
         std::cout << "Name token failed" << std::endl;
-        message = "CF";
+        message = "CF\n";
         write(p->getPlayerSocket(), message.c_str(), message.length());
         return;
     }
     std::cout << token << std::endl;
     std::string name = token;
-    token = strtok(NULL, " ");
+    token = strtok(NULL, "/");
     if(token == NULL)
     {
         std::cout << "Size token failed" << std::endl;
-        message = "CF";
+        message = "CF\n";
         write(p->getPlayerSocket(), message.c_str(), message.length());
         return;
     }
@@ -302,8 +314,9 @@ void createLobby(char* buf, player* p)
     l->setLobbyId(20); //placeholder until can add code for random two digit integer
     l->addPlayer(p);
     lobbies.push_back(l);
-    message = "CT ";
+    message = "CT/";
     message += std::to_string(l->getLobbyId());
+    message += "\n";
     write(p->getPlayerSocket(), message.c_str(), message.length());
     return;
 }
