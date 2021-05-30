@@ -1,6 +1,6 @@
 #include "lobby.h"
 
-std::vector<player> lobby::getPlayers()
+std::vector<player*> lobby::getPlayers()
 {
     return this->players;
 }
@@ -41,7 +41,7 @@ void lobby::setLobbyId(int Id)
     this->lobbyId = Id;
 }
 
-void lobby::addPlayers(player newPlayer)
+void lobby::addPlayer(player* newPlayer)
 {
     this->players.push_back(newPlayer);
 }

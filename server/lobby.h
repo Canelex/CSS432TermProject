@@ -10,7 +10,7 @@
 class lobby
 {
 public:
-    std::vector<player> getPlayers();
+    std::vector<player*> getPlayers();
     std::string getLobbyName();
     int getLobbyId();
     int getLobbySize();
@@ -19,14 +19,14 @@ public:
     void setLobbySize(int size);
     void setLobbyName(std::string name);
     void setLobbyId(int Id);
-    void addPlayers(player newPlayer);
+    void addPlayer(player* newPlayer);
     void update();
 
 
 private:
     std::string lobbyName;
     int lobbyId;
-    std::vector<player> players;
+    std::vector<player*> players;
     int lobbySize = 0;
     bool startGame;
 
