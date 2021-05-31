@@ -85,6 +85,9 @@ int main ()
     int i = 0;
     while(true)
     {
+        sockaddr_in newsock;   // place to store parameters for the new connection
+        socklen_t newsockSize = sizeof(newsock);
+        int newSd = accept4(serverSd, (sockaddr *)&newsock, &newsockSize, SOCK_NONBLOCK);  // grabs the new connection and assigns it a temporary socket
         //If threadHolder contains threads, then try to join as many as possible in order to keep the number of open threads low
         //This also helps to make sure disconnected clients aren't taking up space in the server
         if(threadHolder.size() > 0)
@@ -105,9 +108,6 @@ int main ()
             }
             i = threadHolder.size();
         }
-        sockaddr_in newsock;   // place to store parameters for the new connection
-        socklen_t newsockSize = sizeof(newsock);
-        int newSd = accept4(serverSd, (sockaddr *)&newsock, &newsockSize, SOCK_NONBLOCK);  // grabs the new connection and assigns it a temporary socket
         if(newSd == -1)
         {
             continue;
@@ -221,6 +221,14 @@ void* serviceConnection(void* newSd)
                 break;
             case 'Q':
                 std::cout << "Connection Closing" << std::endl;
+                if(p != NULL && p->isInLobby())
+                {
+                    std::cout << "Cleaning up player out of lobby" << std::endl;
+                    for(lobby* l: lobbies)
+                    {
+                        l->findPlayerPop(p);
+                    }
+                }
                 close(fd);
                 delete p;
                 return NULL;
@@ -312,7 +320,18 @@ void createLobby(char* buf, player* p)
     l->setLobbyName(name);
     l->setLobbySize(size);
     l->setLobbyId(20); //placeholder until can add code for random two digit integer
+    if(p->isInLobby())
+    {
+        for(lobby* indL: lobbies)
+        {
+            if(indL->findPlayerPop(p) != NULL)
+            {
+                break;
+            }
+        }
+    }
     l->addPlayer(p);
+    p->setInLobby(true);
     lobbies.push_back(l);
     message = "CT/";
     message += std::to_string(l->getLobbyId());
