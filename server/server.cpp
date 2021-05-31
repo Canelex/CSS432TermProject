@@ -305,6 +305,7 @@ void createLobby(char* buf, player* p)//Creates a new lobby and adds the player 
         std::cout << "Client connection is trying to access lobby services before registration" << std::endl;
         return;
     }
+    playerInLobbyCheck(p);
     std::string message;
     char* token = strtok(buf, "/"); //Grabs the first letter of the command
     token = strtok(NULL, "/"); //Grabs the lobby name
@@ -326,11 +327,17 @@ void createLobby(char* buf, player* p)//Creates a new lobby and adds the player 
         return;
     }
     int size = atoi(token);
+    if(size <= 1)
+    {
+        std::cout << "Cannot create a looby of size 1 or less" << std::endl;
+        message = "CF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
     lobby* l = new lobby();
     l->setLobbyName(name);
     l->setLobbySize(size);
     l->setLobbyId(20); //placeholder until can add code for random two digit integer
-    playerInLobbyCheck(p);
     l->addPlayer(p);
     p->setInLobby(true);
     lobbies.push_back(l);
@@ -368,6 +375,13 @@ void joinLobby(char* buf, player* p)
     {
         if(l->getLobbyId() == atoi(token))
         {
+            if(l->getLobbyNumPlayers() + 1 > l->getLobbySize())
+            {
+                std::cout << "Cannot join a lobby that is full" << std::endl;
+                message = "CF\n";
+                write(p->getPlayerSocket(), message.c_str(), message.length());
+                return;
+            }
             l->addPlayer(p);
             p->setInLobby(true);
             break;
@@ -376,7 +390,6 @@ void joinLobby(char* buf, player* p)
     if(!p->isInLobby())
     {
         std::cout << "Player tried to join a lobby that doesn exist" << std::endl;
-        std::cout << "Pulling Player out of their original lobby" << std::endl;
         message = "JF\n";
         write(p->getPlayerSocket(), message.c_str(), message.length());
         return;
@@ -398,7 +411,7 @@ void playerInLobbyCheck(player* p)
 {
     if(p->isInLobby())
     {
-        std::cout << "Player is already in a lobby. Taking player out of current lobby." << std::endl;
+        std::cout << "Player is already in a lobby, taking player out of current lobby." << std::endl;
         for(lobby* indL: lobbies)
         {
             if(indL->findPlayerPop(p) != NULL)
@@ -410,7 +423,7 @@ void playerInLobbyCheck(player* p)
     }
     else
     {
-        std::cout << "Player isn't in lobby, cannot take them out of looby." << std::endl;
+        std::cout << "Player isn't in lobby, cannot take them out of lobby." << std::endl;
     }
     return;
 }
