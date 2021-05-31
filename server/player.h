@@ -14,12 +14,14 @@ public:
     int getPlayerXPos();
     int getPlayerYPos();
     void* getPlayerColor();
-
+    bool isInLobby();
+    
     void setName(std::string name);
     void setSocket(int socket);
     void setXPos(int x);
     void setYPos(int y);
     void setColor(void* color);
+    void setInLobby(bool b);
 
 
 private:
@@ -28,6 +30,7 @@ private:
     int x = 0;
     int y = 0;
     void* color;
+    bool inLobby = false;
 };
 
 #endif

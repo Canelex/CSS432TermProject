@@ -25,6 +25,11 @@ void* player::getPlayerColor()
     return this->color;
 }
 
+bool player::isInLobby()
+{
+    return this->inLobby;
+}
+
 void player::setName(std::string name)
 {
     this->name = name;
@@ -48,4 +53,9 @@ void player::setYPos(int y)
 void player::setColor(void* color)
 {
     this->color = color;
+}
+
+void player::setInLobby(bool b)
+{
+    this->inLobby = b;
 }
