@@ -36,9 +36,11 @@ void createLobby(char* buf, player* p);
 
 void lobbyInfo(char* buf);
 
-void joinLobby(char* buf);
+void joinLobby(char* buf, player* p);
 
-void exitLobby(char* buf);
+void exitLobby(char* buf, player* p);
+
+void playerInLobbyCheck(player* p);
 
 int main () 
 {
@@ -213,11 +215,11 @@ void* serviceConnection(void* newSd)
                 break;
             case 'J':
                 gettimeofday(&tv, NULL);
-                joinLobby(buf);
+                joinLobby(buf, p);
                 break;
             case 'E':
                 gettimeofday(&tv, NULL);
-                exitLobby(buf);
+                exitLobby(buf, p);
                 break;
             case 'Q':
                 std::cout << "Connection Closing" << std::endl;
@@ -238,20 +240,28 @@ void* serviceConnection(void* newSd)
     return NULL;
 }
 
-void addLobby(lobby* l)
+void addLobby(lobby* l)//Adds a lobby to the list of lobbies
 {
     lobbies.push_back(l);
 }
 
-player* registration(char* buf, int& fd)
+player* registration(char* buf, int& fd)//Registers a player to the game. Must do this in order to access other functionality
 {
     player* p;
     std::string message;
     char* token;
-    token = strtok(buf, "/");
-    token = strtok(NULL, "\r\n");
+    token = strtok(buf, "/"); //Grabs the fist letter of the command
+    token = strtok(NULL, "\r\n"); //Grabs the name of the player to register
+    if(token == NULL)
+    {
+        std::cout << "Null name space" << std::endl;
+        message = "RF\n";
+        write(fd, message.c_str(), message.length());
+        return NULL;
+    }
     if(strlen(token) < 3 || strlen(token) > 10)
     {
+        std::cout << "Failed to register player " << token << " " << strlen(token) << std::endl;
         message = "RF\n";
         write(fd, message.c_str(), message.length());
         return NULL;
@@ -265,7 +275,7 @@ player* registration(char* buf, int& fd)
     return p;
 }
 
-void listLobbies(player* p)
+void listLobbies(player* p)//Lists all lobbies in the game
 {
     if(p == NULL)
     {
@@ -288,7 +298,7 @@ void listLobbies(player* p)
     return;
 }
 
-void createLobby(char* buf, player* p)
+void createLobby(char* buf, player* p)//Creates a new lobby and adds the player to that lobby
 {
     if(p == NULL)
     {
@@ -296,8 +306,8 @@ void createLobby(char* buf, player* p)
         return;
     }
     std::string message;
-    char* token = strtok(buf, "/");
-    token = strtok(NULL, "/");
+    char* token = strtok(buf, "/"); //Grabs the first letter of the command
+    token = strtok(NULL, "/"); //Grabs the lobby name
     if(token == NULL)
     {
         std::cout << "Name token failed" << std::endl;
@@ -307,7 +317,7 @@ void createLobby(char* buf, player* p)
     }
     std::cout << token << std::endl;
     std::string name = token;
-    token = strtok(NULL, "/");
+    token = strtok(NULL, "/");//grabs the size of the lobby to be created
     if(token == NULL)
     {
         std::cout << "Size token failed" << std::endl;
@@ -320,16 +330,7 @@ void createLobby(char* buf, player* p)
     l->setLobbyName(name);
     l->setLobbySize(size);
     l->setLobbyId(20); //placeholder until can add code for random two digit integer
-    if(p->isInLobby())
-    {
-        for(lobby* indL: lobbies)
-        {
-            if(indL->findPlayerPop(p) != NULL)
-            {
-                break;
-            }
-        }
-    }
+    playerInLobbyCheck(p);
     l->addPlayer(p);
     p->setInLobby(true);
     lobbies.push_back(l);
@@ -345,13 +346,72 @@ void lobbyInfo(char* buf)
 
 }
 
-void joinLobby(char* buf)
+void joinLobby(char* buf, player* p)
 {
-
+    if(p == NULL)
+    {
+        std::cout << "Client trying to access lobby services before registration" << std::endl;
+        return;
+    }
+    playerInLobbyCheck(p);
+    std::string message;
+    char* token = strtok(buf, "/");//Get the first letter of the command
+    token = strtok(NULL, "\r\n");//Get the lobby ID
+    if(token == NULL)
+    {
+        std::cout << "Missing lobby ID information" << std::endl;
+        message = "JF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    for(lobby* l: lobbies)
+    {
+        if(l->getLobbyId() == atoi(token))
+        {
+            l->addPlayer(p);
+            p->setInLobby(true);
+            break;
+        }
+    }
+    if(!p->isInLobby())
+    {
+        std::cout << "Player tried to join a lobby that doesn exist" << std::endl;
+        std::cout << "Pulling Player out of their original lobby" << std::endl;
+        message = "JF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    message = "JT\n";
+    write(p->getPlayerSocket(), message.c_str(), message.length());
 }
 
-void exitLobby(char* buf)
+void exitLobby(char* buf, player* p)
 {
+    if(p == NULL)
+    {
+        std::cout << "Client trying to access lobby services before registering" << std::endl;
+    }
+    playerInLobbyCheck(p);
+}
 
+void playerInLobbyCheck(player* p)
+{
+    if(p->isInLobby())
+    {
+        std::cout << "Player is already in a lobby. Taking player out of current lobby." << std::endl;
+        for(lobby* indL: lobbies)
+        {
+            if(indL->findPlayerPop(p) != NULL)
+            {
+                p->setInLobby(false);
+                break;
+            }
+        }
+    }
+    else
+    {
+        std::cout << "Player isn't in lobby, cannot take them out of looby." << std::endl;
+    }
+    return;
 }
 
