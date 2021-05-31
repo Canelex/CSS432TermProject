@@ -24,6 +24,21 @@ int lobby::getLobbyNumPlayers()
 {
     return this->players.size();
 }
+
+player* lobby::findPlayerPop(player* p)
+{
+    int i = 0;
+    for(player* indP: this->players)
+    {
+        if(indP->getPlayerSocket() == p->getPlayerSocket())
+        {
+            this->players.erase(this->players.begin() + i);
+            return p;
+        }
+        i++;
+    }
+    return NULL;
+}
     
 void lobby::setLobbySize(int size)
 {

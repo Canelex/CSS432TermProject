@@ -15,6 +15,7 @@ public:
     int getLobbyId();
     int getLobbySize();
     int getLobbyNumPlayers();
+    player* findPlayerPop(player* p);
 
     void setLobbySize(int size);
     void setLobbyName(std::string name);
