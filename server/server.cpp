@@ -53,13 +53,13 @@ int main ()
     lobby* lobby1 = new lobby();
     lobby* lobby2 = new lobby();
     lobby0->setLobbySize(2);
-    lobby0->setLobbyName("Preset 1 v 1 Match");
+    lobby0->setLobbyName("Preset 1v1");
     lobby0->setLobbyId(0);
     lobby1->setLobbySize(3);
-    lobby1->setLobbyName("Preset 1 v 1 v 1 Match");
+    lobby1->setLobbyName("Preset 1v1v1");
     lobby1->setLobbyId(1);
     lobby2->setLobbySize(4);
-    lobby2->setLobbyName("Preset 1 v 1 v 1 v 1 Match");
+    lobby2->setLobbyName("Preset 1v1v1v1");
     lobby2->setLobbyId(2);
     addLobby(lobby0);
     addLobby(lobby1);
@@ -125,7 +125,7 @@ int main ()
         i++;
         std::cout << threadHolder.size() << std::endl;
     }
-    
+    std::cout << "How did you get out here? This shouldn't be abllowed..." << std::endl;
     
     return 0;
 }
@@ -184,11 +184,21 @@ void* serviceConnection(void* newSd)
             if(lap.tv_sec - tv.tv_sec > 300)
             {
                 std::cout << "Connection timed out. Closing connection." << std::endl;
-                memset(buf, '\0', BUF_SIZE);
-                buf[0] = 'Q';
-                write(fd, buf, sizeof('Q'));
+                if(p != NULL && p->isInLobby())
+                {
+                    std::cout << "Cleaning up player out of lobby" << std::endl;
+                    for(lobby* l: lobbies)
+                    {
+                        if(l->findPlayerPop(p) != NULL)
+                        {
+                            updateNumLobbyPlayers(l);
+                        }
+                    }
+                }
                 close(fd);
+                std::cout << "closing fd" << std::endl;
                 delete p;
+                std::cout << "deleting player" << std::endl;
                 return NULL;
             }
         }
