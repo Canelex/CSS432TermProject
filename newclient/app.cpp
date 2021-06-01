@@ -72,7 +72,13 @@ void App::handleEvents() {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
         case SDL_QUIT:
-            running = false;
+            if (netman->isConnected()) {
+                // Try to disconnect
+                netman->sendQuitGame();
+            } else {
+                // Okay, just close it.
+                running = false;
+            }
             break;
         default:
             screens[activeScreenIndex]->handleEvent(event);
@@ -89,6 +95,13 @@ void App::handlePackets() {
     while (netman->hasNextPacket()) {
         string p = netman->poll();
         if (p.length() > 0) {
+
+            // Game closed?
+            if (p == "close") {
+                running = false;
+                return;
+            }
+
             screens[activeScreenIndex]->handlePacket(p);
         }
     }

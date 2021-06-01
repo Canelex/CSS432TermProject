@@ -62,6 +62,14 @@ void packetHandler(const char* address, int port, NetMan& net) {
                 send(sock, p.c_str(), p.length(), 0);
                 cout << "Sent packet " << p << endl;
 
+                // Quit game (it'd be nice to close connection first)
+                if (p == "Q") {
+                    closesocket(sock);
+                    net.connected = false;
+                    net.incoming.push_back("close");
+                    return; // no data to rad
+                }
+
                 // Read incoming packets
                 char buffer[256];
                 int bytes = recv(sock, buffer, sizeof(buffer), 0);
@@ -151,14 +159,14 @@ void NetMan::sendJoinLobby(int lobbyId) {
 * Sends exit lobby packet
 */
 void NetMan::sendExitLobby() {
-    outgoing.push_back("L");
+    outgoing.push_back("E");
 }
 
 /**
 * Sends quit game lobby packet
 */
 void NetMan::sendQuitGame() {
-    outgoing.push_back("E");
+    outgoing.push_back("Q");
 }
 
 /**
