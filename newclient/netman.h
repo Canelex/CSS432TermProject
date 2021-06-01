@@ -37,10 +37,45 @@ public:
     ~NetMan();
 
     /**
-    * Sends a packet to the server but does not wait for answer.
-    * Response will be picked up by the thread.
+    * Sends register packet
     */
-    void dispatch(string packet);
+    void sendRegister(string username);
+
+    /**
+    * Sends list lobbies packet
+    */
+    void sendListLobbies();
+
+    /**
+    * Sends create lobby packet
+    */
+    void sendCreateLobby(string name, int size);
+
+    /**
+    * Sends lobby info packet
+    */
+    void sendLobbyInfo(int lobbyId);
+
+    /**
+    * Sends join lobby packet
+    */
+    void sendJoinLobby(int lobbyId);
+
+    /**
+    * Sends exit lobby packet
+    */
+    void sendExitLobby();
+
+    /**
+    * Sends quit game lobby packet
+    */
+    void sendQuitGame();
+
+    /**
+    * Returns whether the network manager is connected to
+    * the server cosket
+    */
+    bool isConnected() const;
 
     /** 
     * Returns whether there is an incoming packet sitting in 
@@ -54,6 +89,9 @@ public:
     string poll();
 
 private:
+    // Is the netman connected to server?
+    bool connected;
+
     // List of packets to send
     vector<string>* outgoing;
 

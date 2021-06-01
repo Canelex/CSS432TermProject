@@ -92,8 +92,7 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
         }
 
         // Dispatch a register packet
-        string packet = "R" + username;
-        app->getNetworkManager().dispatch(packet);
+        app->getNetworkManager().sendRegister(username);
     }
 }
 

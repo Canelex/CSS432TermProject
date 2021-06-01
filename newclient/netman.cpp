@@ -110,11 +110,67 @@ NetMan::~NetMan() {
 }
 
 /**
-* Sends a packet to the server but does not wait for answer.
-* Response will be picked up by the thread.
+* Sends register packet
 */
-void NetMan::dispatch(string packet) {
+void NetMan::sendRegister(string username) {
+    outgoing->push_back("R/" + username);
+}
+
+/**
+* Sends list lobbies packet
+*/
+void NetMan::sendListLobbies() {
+    outgoing->push_back("L");
+}
+
+/**
+* Sends create lobby packet
+*/
+void NetMan::sendCreateLobby(string name, int size) {
+    // Build packet
+    string packet = "C/";
+    packet += name;
+    packet += "/";
+    packet += size;
+
+    // Send it
     outgoing->push_back(packet);
+}
+
+/**
+* Sends lobby info packet
+*/
+void NetMan::sendLobbyInfo(int lobbyId) {
+    outgoing->push_back("I/" + lobbyId);
+}
+
+/**
+* Sends join lobby packet
+*/
+void NetMan::sendJoinLobby(int lobbyId) {
+    outgoing->push_back("J/" + lobbyId);
+}
+
+/**
+* Sends exit lobby packet
+*/
+void NetMan::sendExitLobby() {
+    outgoing->push_back("L");
+}
+
+/**
+* Sends quit game lobby packet
+*/
+void NetMan::sendQuitGame() {
+    outgoing->push_back("E");
+}
+
+/**
+* Returns whether the network manager is connected to
+* the server cosket
+*/
+bool NetMan::isConnected() const {
+    return connected;
 }
 
 /**
