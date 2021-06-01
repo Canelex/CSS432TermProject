@@ -5,7 +5,7 @@
 * Asynchronous packet handler. Constantly reads from socket,
 * parses packets, and adds them to the incoming packet queue.
 */
-void packetHandler(const char* address, int port, vector<string>* incoming, vector<string>* outgoing) {
+void packetHandler(const char* address, int port, NetMan& net) {
 
     // Initialize WINSOCK
     WSAData wsaData;
@@ -46,22 +46,17 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
             continue;
         }
 
+        net.connected = true;
         cout << "Connected to server" << endl;
         
 
         // Success! Let's keep reading packets
         while (true) {
-            if (incoming == nullptr || outgoing == nullptr) {
-                // Kill the thread
-                cout << "Thread killed." << endl;
-                return;
-            }
-
             // Are there packets to send?
-            if (!outgoing->empty()) {
+            if (!net.outgoing.empty()) {
                 // Dequeue front packet
-                string p = outgoing->front();
-                outgoing->erase(outgoing->begin());
+                string p = net.outgoing.front();
+                net.outgoing.erase(net.outgoing.begin());
 
                 // Send the data
                 send(sock, p.c_str(), p.length(), 0);
@@ -73,14 +68,15 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
                 
                 // Connection is closed
                 if (bytes == 0) {
-                    outgoing->insert(outgoing->begin(), p); // reinsert packet
+                    net.outgoing.insert(net.outgoing.begin(), p); // reinsert packet
                     cout << "Disconnected from socket. Retrying...";
                     closesocket(sock);
+                    net.connected = false;
                     break;
                 }
 
                 buffer[bytes] = 0;
-                incoming->push_back(string(buffer));
+                net.incoming.push_back(string(buffer));
             }
         }
     }
@@ -95,12 +91,8 @@ NetMan::NetMan(const char* address, int port) {
     // Not connected by default
     connected = false;
 
-    // Create queues
-    incoming = new vector<string>();
-    outgoing = new vector<string>();
-
     // Create a thread
-    thread t(&packetHandler, address, port, incoming, outgoing);
+    thread t(&packetHandler, address, port, ref(*this));
 
     // Let the thread run on its own
     t.detach();
@@ -111,30 +103,20 @@ NetMan::NetMan(const char* address, int port) {
 */
 NetMan::~NetMan() {
     cout << "Destroying netman" << endl;
-
-    if (incoming != nullptr) {
-        delete incoming;
-        incoming = nullptr;
-    }
-
-    if (outgoing != nullptr) {
-        delete outgoing;
-        outgoing = nullptr;
-    }
 }
 
 /**
 * Sends register packet
 */
 void NetMan::sendRegister(string username) {
-    outgoing->push_back("R/" + username);
+    outgoing.push_back("R/" + username);
 }
 
 /**
 * Sends list lobbies packet
 */
 void NetMan::sendListLobbies() {
-    outgoing->push_back("L");
+    outgoing.push_back("L");
 }
 
 /**
@@ -148,35 +130,35 @@ void NetMan::sendCreateLobby(string name, int size) {
     packet += size;
 
     // Send it
-    outgoing->push_back(packet);
+    outgoing.push_back(packet);
 }
 
 /**
 * Sends lobby info packet
 */
 void NetMan::sendLobbyInfo(int lobbyId) {
-    outgoing->push_back("I/" + lobbyId);
+    outgoing.push_back("I/" + lobbyId);
 }
 
 /**
 * Sends join lobby packet
 */
 void NetMan::sendJoinLobby(int lobbyId) {
-    outgoing->push_back("J/" + lobbyId);
+    outgoing.push_back("J/" + lobbyId);
 }
 
 /**
 * Sends exit lobby packet
 */
 void NetMan::sendExitLobby() {
-    outgoing->push_back("L");
+    outgoing.push_back("L");
 }
 
 /**
 * Sends quit game lobby packet
 */
 void NetMan::sendQuitGame() {
-    outgoing->push_back("E");
+    outgoing.push_back("E");
 }
 
 /**
@@ -192,26 +174,18 @@ bool NetMan::isConnected() const {
 * the queue
 */
 bool NetMan::hasNextPacket() {
-    if (incoming == nullptr) {
-        return false;
-    }
-
-    return !incoming->empty();
+    return !incoming.empty();
 }
 
 /**
  * Dequeues the most recent incoming packet and returns it.
  */
 string NetMan::poll() {
-    if (incoming == nullptr) {
+    if (incoming.empty()) {
         return "";
     }
 
-    if (incoming->empty()) {
-        return "";
-    }
-
-    string front = incoming->front();
-    incoming->erase(incoming->begin());
+    string front = incoming.front();
+    incoming.erase(incoming.begin());
     return front;
 }

@@ -86,14 +86,20 @@ public:
      */
     string poll();
 
+    /**
+    * Asynchronous packet handler. Constantly reads from socket,
+    * parses packets, and adds them to the incoming packet queue.
+    */
+    friend void packetHandler(const char* address, int port, NetMan& net);
+
 private:
     // Is the netman connected to server?
     bool connected;
 
     // List of packets to send
-    vector<string>* outgoing;
+    vector<string> outgoing;
 
     // List of packets received
-    vector<string>* incoming;
+    vector<string> incoming;
 };
 
