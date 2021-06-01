@@ -5,13 +5,21 @@
 * is used to load all assets and objects needed for the
 * screen.
 */
-void LobbyScreen::init() {}
+void LobbyScreen::init() {
+    // Request for data
+    //app->getNetworkManager()->sendLobbyInfo(app->getLobbyId());
+    exiting = false;
+}
 
 /**
 * This method is called whenever an event happens and this
 * screen is currently being rendered.
 */
 void LobbyScreen::handleEvent(SDL_Event& event) {
+    if (exiting) {
+        return; // don't let them do anything else
+    }
+
     // Mouse click
     if (event.type == SDL_MOUSEBUTTONDOWN) {
 
@@ -28,7 +36,8 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
         if (x >= 20 && x <= 20 + 100 &&
             y >= 20 && y <= 20 + 50) {
 
-            app->openScreen(1);
+            exiting = true;
+            app->getNetworkManager()->sendExitLobby();
         }
     }
 }
@@ -38,7 +47,20 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void LobbyScreen::handlePacket(string packet) {
-
+    switch (packet.at(0)) {
+    case 'I':
+        cout << "Received info about lobby" << endl;
+        break;
+    case 'E':
+        if (packet == "ET\n") {
+            cout << "Successfully left lobby" << endl;
+            app->openScreen(1);
+        } else {
+            cout << "Failed to leave lobby" << endl;
+            exiting = false;
+        }
+        break;
+    }
 }
 
 /**

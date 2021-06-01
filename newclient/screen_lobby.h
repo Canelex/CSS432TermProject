@@ -51,5 +51,7 @@ public:
     void clean();
 
 private:
+    // Is the player exiting the lobby?
+    bool exiting;
 };
 

@@ -12,8 +12,6 @@
 #include "texman.h"
 #include "netman.h"
 
-size_t tries = 0;
-
 /**
 * Constructor accepts a server address and a port, which it eventually
 * passes to the network manager (which uses a thread to do networking)
@@ -53,6 +51,7 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         // Setup texman
         TexMan::setRenderer(renderer);
 
+        closing = false;
         running = true;
     }
     else {
@@ -77,10 +76,10 @@ void App::handleEvents() {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
         case SDL_QUIT:
-            tries++;
-            if (tries < 3 && netman->isConnected()) {
+            if (!closing && netman->isConnected()) {
                 // Try to disconnect
                 netman->sendQuitGame();
+                closing = true;
             } else {
                 // Okay, just close it.
                 running = false;

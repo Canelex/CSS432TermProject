@@ -49,9 +49,31 @@ void packetHandler(const char* address, int port, NetMan& net) {
         net.connected = true;
         cout << "Connected to server" << endl;
         
-
-        // Success! Let's keep reading packets
+        unsigned long howMuchInBuffer = 0;
         while (true) {
+            // See how much is in buffer
+            ioctlsocket(sock, FIONREAD, &howMuchInBuffer);
+
+            // We have a packet waiting
+            if (howMuchInBuffer > 0) {
+                // Read incoming packet
+                char buffer[256];
+                int bytes = recv(sock, buffer, sizeof(buffer), 0);
+
+                // Connection is closed
+                if (bytes == 0) {
+                    cout << "Disconnected from socket. Reconnecting now.";
+                    closesocket(sock);
+                    net.connected = false;
+                    break;
+                }
+
+                // Pass to game
+                buffer[bytes] = 0;
+                cout << "Rec " << buffer << endl;
+                net.incoming.push_back(string(buffer));
+            }
+
             // Are there packets to send?
             if (!net.outgoing.empty()) {
                 // Dequeue front packet
@@ -64,27 +86,12 @@ void packetHandler(const char* address, int port, NetMan& net) {
 
                 // Quit game (it'd be nice to close connection first)
                 if (p == "Q") {
+                    cout << "Killing thread (quit)";
                     closesocket(sock);
                     net.connected = false;
                     net.incoming.push_back("close");
                     return; // no data to rad
                 }
-
-                // Read incoming packets
-                char buffer[256];
-                int bytes = recv(sock, buffer, sizeof(buffer), 0);
-                
-                // Connection is closed
-                if (bytes == 0) {
-                    net.outgoing.insert(net.outgoing.begin(), p); // reinsert packet
-                    cout << "Disconnected from socket. Retrying...";
-                    closesocket(sock);
-                    net.connected = false;
-                    break;
-                }
-
-                buffer[bytes] = 0;
-                net.incoming.push_back(string(buffer));
             }
         }
     }
@@ -110,7 +117,7 @@ NetMan::NetMan(const char* address, int port) {
 * Destructor for network manager
 */
 NetMan::~NetMan() {
-    cout << "Destroying netman" << endl;
+    
 }
 
 /**

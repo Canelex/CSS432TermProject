@@ -135,8 +135,10 @@ void LobbiesScreen::handlePacket(string packet) {
             Lobby lobby = { id, name, size, maxsize };
             lobbies.push_back(lobby);
         }
+        cout << "Received " << lobbies.size() << " lobbies." << endl;
         break;
     case 'J':
+        cout << "Joining lobby " << selected.id << "..." << endl;
         app->setLobbyId(selected.id);
         app->openScreen(3); // open lobby screen
         break;

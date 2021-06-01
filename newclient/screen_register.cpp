@@ -85,11 +85,12 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
 void RegisterScreen::handlePacket(string packet) {
     switch (packet.at(0)) {
         case 'R':
-            cout << packet << endl;
             if (packet == "RT\n") {
+                cout << "Successfully registered" << endl;
                 app->openScreen(1);
             }
             if (packet == "RF\n") {
+                cerr << "Failed to register" << endl;
                 username = "";
             }
             break;

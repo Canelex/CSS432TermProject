@@ -23,7 +23,7 @@ void TexMan::drawImage(string path, int x, int y, int w, int h) {
         SDL_FreeSurface(tmp);
 
         // Save it now
-        cout << "Loaded texture " << path << endl;
+        //cout << "Loaded texture " << path << endl;
         textures.insert(make_pair(path, texture));
     } else {
         // Get texture from map

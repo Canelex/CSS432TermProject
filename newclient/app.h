@@ -95,6 +95,7 @@ public:
 private:
     // Is the game running?
     bool running;
+    bool closing;
 
     // vector of screens
     vector<Screen*> screens;
