@@ -7,35 +7,9 @@
 * screen.
 */
 void LobbiesScreen::init() {
-    // Setup background
-    texBG = TexMan::LoadImageTexture("assets/register_bg.png", renderer);
-    rectBG.x = 0;
-    rectBG.y = 0;
-    rectBG.w = 900;
-    rectBG.h = 600;
-
-    // Setup back button
-    texBack = TexMan::LoadImageTexture("assets/back_btn.png", renderer);
-    rectBack.x = 20;
-    rectBack.y = 20;
-    rectBack.w = 100;
-    rectBack.h = 50;
-
-    // Setup lobby button
-    texLobby = TexMan::LoadImageTexture("assets/lobby_btn.png", renderer);
-
-    // Setup custom button
-    texCustom = TexMan::LoadImageTexture("assets/custom_btn.png", renderer);
-    rectCustom = { 430, 20, 100, 50 };
-
     // Send a list lobbies
-    //app->getNetworkManager().dispatch("L");
-    lobbies.push_back({ 0, "Lobby 1" });
-    lobbies.push_back({ 1, "Lobby 2" });
-    lobbies.push_back({ 2, "Lobby 3" });
-    lobbies.push_back({ 2, "Lobby 4" });
-    lobbies.push_back({ 2, "Lobby 5" });
-
+    ticksSinceList = 0;
+    app->getNetworkManager()->sendListLobbies();
 }
 
 /**
@@ -56,14 +30,16 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
         int x = event.button.x;
         int y = event.button.y;
 
-        if (x >= rectBack.x && x <= rectBack.x + rectBack.w &&
-            y >= rectBack.y && y <= rectBack.y + rectBack.h) {
+        // back 20 20 100 50
+        if (x >= 20 && x <= 20 + 100 &&
+            y >= 20 && y <= 20 + 50) {
 
             app->openScreen(0);
         }
 
-        if (x >= rectCustom.x && x <= rectCustom.x + rectCustom.w &&
-            y >= rectCustom.y && y <= rectCustom.y + rectCustom.h) {
+        // custom 430 20 100 50
+        if (x >= 430 && x <= 430 + 100 &&
+            y >= 20 && y <= 20 + 50) {
 
             app->openScreen(0);
         }
@@ -84,6 +60,50 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
 void LobbiesScreen::handlePacket(string packet) {
     switch (packet.at(0)) {
     case 'L':
+        // Clear lobbies
+        lobbies.clear();
+        size_t start = packet.find_first_of("LT/");
+
+        // Bad input
+        if (start == string::npos) {
+            return;
+        }
+
+        // Cut out the LT/
+        packet = packet.substr(start + 3);
+
+        // Maximum of 100 lobbies
+        size_t index;
+        for (int i = 0; i < 100; i++) {
+            // Parse ID
+            index = packet.find_first_of('/');
+            if (index == string::npos) break;
+            int id = stoi(packet.substr(0, index));
+            packet = packet.substr(index + 1);
+
+            // Parse name
+            index = packet.find_first_of('/');
+            if (index == string::npos) break;
+            string name = packet.substr(0, index);
+            packet = packet.substr(index + 1);
+
+            // Parse size
+            index = packet.find_first_of('/');
+            if (index == string::npos) break;
+            int size = stoi(packet.substr(0, index));
+            packet = packet.substr(index + 1);
+
+            // Parse maxsize
+            index = packet.find_first_of('\n');
+            if (index == string::npos) break;
+            int maxsize = stoi(packet.substr(0, index));
+            packet = packet.substr(index + 1);
+
+            // Create lobby
+            Lobby lobby = { id, name, size, maxsize };
+            lobbies.push_back(lobby);
+        }
+            
         
         break;
     }
@@ -110,7 +130,13 @@ void LobbiesScreen::update() {
             scrollY = 0;
         }
     }
-    
+
+    // Periodically fetch new list
+    ticksSinceList++;
+    if (ticksSinceList > 300) { // 5s
+        app->getNetworkManager()->sendListLobbies();
+        ticksSinceList = 0;
+    }
 }
 
 /**
@@ -121,44 +147,38 @@ void LobbiesScreen::update() {
 void LobbiesScreen::render() {
 
     // Render the background
-    SDL_RenderCopy(renderer, texBG, NULL, &rectBG);
+    TexMan::drawImage("assets/register_bg.png", 0, 0, 900, 600);
 
-    SDL_SetRenderDrawColor(renderer, 17, 76, 122, 255);
-    SDL_Rect rectScroll = { 0, 0, 550, 600 };
-    SDL_RenderFillRect(renderer, &rectScroll);
+    // Render the lobby list background
+    TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 550, 600);
 
-    SDL_Rect rect = { 50, 120, 200, 200 };
-    
+    // Render each lobby
     for (int i = 0; i < lobbies.size(); i++) {
-        rect.x = 50 + 250 * (i % 2);
-        rect.y = 120 + 250 * (int)(i / 2) - scrollY;
-        SDL_RenderCopy(renderer, texLobby, NULL, &rect);
+        Lobby l = lobbies[i];
 
-        // Get text texture
-        SDL_Color textColor = { 255, 255, 255 };
-        SDL_Texture* text = TexMan::LoadFontTexture(lobbies[i].name.c_str(), textColor, 24, renderer);
+        // Top left corner of lobby
+        int x = 50 + 250 * (i % 2);
+        int y = 120 + 250 * (int)(i / 2) - scrollY;
 
-        // Render it
-        int text_width, text_height;
-        SDL_QueryTexture(text, NULL, NULL, &text_width, &text_height);
-        SDL_Rect textRect;
-        textRect.x = rect.x + (rect.w - text_width) / 2;
-        textRect.y = rect.y + (rect.h - text_height) / 2;
-        textRect.w = text_width;
-        textRect.h = text_height;
-        SDL_RenderCopy(renderer, text, NULL, &textRect);
-        SDL_DestroyTexture(text);
+        // Render the lobby bg
+        TexMan::drawImage("assets/lobby_btn.png", x, y, 200, 200);
+
+        // Draw the name
+        TexMan::drawText(l.name, { 255, 255, 255, 255 }, 20, x + 100, y + 100);
+
+        // Draw the capacity
+        string s = to_string(l.size) + "/" + to_string(l.maxsize);
+        TexMan::drawText(s, { 255, 255, 255, 255 }, 15, x + 175, y + 25);
     }
 
-    SDL_Rect rectHeader = { 0, 0, 550, 90 };
-    SDL_RenderFillRect(renderer, &rectHeader);
+    // Render the header rect
+    TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 550, 90);
 
     // Render the back button
-    SDL_RenderCopy(renderer, texBack, NULL, &rectBack);
+    TexMan::drawImage("assets/back_btn.png", 20, 20, 100, 50);
 
     // Render the custom button
-    SDL_RenderCopy(renderer, texCustom, NULL, &rectCustom);
-
+    TexMan::drawImage("assets/custom_btn.png", 430, 20, 100, 50);
 }
 
 /**
