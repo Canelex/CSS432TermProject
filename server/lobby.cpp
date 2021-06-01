@@ -39,6 +39,18 @@ player* lobby::findPlayerPop(player* p)
     }
     return NULL;
 }
+
+bool lobby::findPlayer(player* p)
+{
+    for(player* indP: this->players)
+    {
+        if(indP->getPlayerSocket() == p->getPlayerSocket())
+        {
+            return true;
+        }
+    }
+    return false;
+}
     
 void lobby::setLobbySize(int size)
 {
