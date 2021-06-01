@@ -11,8 +11,6 @@
 #include "app.h"
 #include "texman.h"
 #include "netman.h"
-#include "screen_register.h"
-#include "screen_lobbies.h"
 
 /**
 * Constructor accepts a server address and a port, which it eventually
@@ -53,17 +51,19 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
         // Setup texman
         TexMan::setRenderer(renderer);
 
-        // Create some screens
-        activeScreenIndex = -1;
-        screens.push_back(new RegisterScreen(this, renderer));
-        screens.push_back(new LobbiesScreen(this, renderer));
-        openScreen(0);
-
         running = true;
     }
     else {
         running = false;
     }
+
+    // Create some screens
+    activeScreenIndex = -1;
+    screens.push_back(new RegisterScreen(this)); // 0
+    screens.push_back(new LobbiesScreen(this)); // 1
+    screens.push_back(new CreateScreen(this)); // 2
+    screens.push_back(new LobbyScreen(this)); // 3
+    openScreen(0);
 }
 
 /**

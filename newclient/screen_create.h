@@ -3,21 +3,14 @@
 #include "screen.h"
 #include <string>
 
-struct Lobby {
-    int id;
-    string name;
-    int size;
-    int maxsize;
-};
-
-class LobbiesScreen : public Screen
+class CreateScreen : public Screen
 {
 public:
     /**
     * This constructor just stores a reference to the renderer
     * for later (rendering).
     */
-    LobbiesScreen(App* app) : Screen(app) {}
+    CreateScreen(App* app) : Screen(app) {}
 
     /*
     * This method is called when the game is first created. It
@@ -58,14 +51,5 @@ public:
     void clean();
 
 private:
-    // List of lobbies
-    vector<Lobby> lobbies;
-
-    // Scroll state variables
-    int scrollY;
-    float scrollVY;
-
-    // Ticks since last query
-    int ticksSinceList;
 };
 

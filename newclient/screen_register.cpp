@@ -8,7 +8,11 @@ using namespace std;
 * is used to load all assets and objects needed for the
 * screen.
 */
-void RegisterScreen::init() {}
+void RegisterScreen::init() {
+    // Reset name
+    username = "";
+    text = "";
+}
 
 /**
 * This method is called whenever an event happens and this
@@ -131,6 +135,4 @@ void RegisterScreen::render() {
 /**
 * This method is called whenever the screen needs to be cleaned
 */
-void RegisterScreen::clean() {
-
-}
+void RegisterScreen::clean() {}

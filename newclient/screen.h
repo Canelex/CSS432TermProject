@@ -27,9 +27,8 @@ public:
     * This constructor just stores a reference to the renderer
     * for later (rendering).
     */
-    Screen(App* app, SDL_Renderer* renderer) {
+    Screen(App* app) {
         this->app = app;
-        this->renderer = renderer;
     }
 
     /*
@@ -73,8 +72,5 @@ public:
 protected:
     // Reference to app object
     App* app;
-
-    // Reference to renderer object
-    SDL_Renderer* renderer;
 };
 

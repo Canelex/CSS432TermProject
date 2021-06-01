@@ -13,6 +13,10 @@
 #include <vector>
 #include <SDL.h>
 #include "screen.h"
+#include "screen_register.h"
+#include "screen_lobbies.h"
+#include "screen_create.h"
+#include "screen_lobby.h"
 #include "netman.h"
 using namespace std;
 

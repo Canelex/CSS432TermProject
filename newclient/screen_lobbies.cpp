@@ -41,7 +41,21 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
         if (x >= 430 && x <= 430 + 100 &&
             y >= 20 && y <= 20 + 50) {
 
-            app->openScreen(0);
+            app->openScreen(2);
+        }
+
+        // Each lobby
+        for (int i = 0; i < lobbies.size(); i++) {
+            // Top left corner of lobby
+            Lobby l = lobbies[i];
+            int lx = 50 + 250 * (i % 2);
+            int ly = 120 + 250 * (int)(i / 2) - scrollY;
+
+            // is it on lobby?
+            if (x >= lx && x <= lx + 200 && y >= ly && y <= ly + 200) {
+                // join lobby
+                app->openScreen(3);
+            }
         }
     }
 

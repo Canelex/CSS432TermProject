@@ -1,5 +1,6 @@
 #pragma once
 #include "app.h"
+#include "screen.h"
 #include <string>
 
 class RegisterScreen : public Screen
@@ -9,7 +10,7 @@ public:
     * This constructor just stores a reference to the renderer
     * for later (rendering).
     */
-    RegisterScreen(App* app, SDL_Renderer* renderer) : Screen(app, renderer) {}
+    RegisterScreen(App* app) : Screen(app) {}
 
     /*
     * This method is called when the game is first created. It
