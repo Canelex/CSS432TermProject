@@ -64,6 +64,7 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
     screens.push_back(new LobbiesScreen(this)); // 1
     screens.push_back(new CreateScreen(this)); // 2
     screens.push_back(new LobbyScreen(this)); // 3
+    screens.push_back(new GameScreen(this)); // 4
     openScreen(0);
 }
 

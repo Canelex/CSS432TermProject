@@ -70,6 +70,20 @@ public:
     void sendQuitGame();
 
     /**
+    * Sends updated player turn
+    * 0 -> up
+    * 1 -> right
+    * 2 -> down
+    * 3 -> left
+    */
+    void sendPlayerDir(int dir);
+
+    /**
+    * Sends player dead event
+    */
+    void sendPlayerDead();
+
+    /**
     * Returns whether the network manager is connected to
     * the server cosket
     */

@@ -177,6 +177,24 @@ void NetMan::sendQuitGame() {
 }
 
 /**
+* Sends updated player turn
+* 0 -> up
+* 1 -> right
+* 2 -> down
+* 3 -> left
+*/
+void NetMan::sendPlayerDir(int dir) {
+    outgoing.push_back("T/" + to_string(dir));
+}
+
+/**
+* Sends player dead event
+*/
+void NetMan::sendPlayerDead() {
+    outgoing.push_back("D");
+}
+
+/**
 * Returns whether the network manager is connected to
 * the server cosket
 */

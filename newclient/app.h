@@ -17,6 +17,7 @@
 #include "screen_lobbies.h"
 #include "screen_create.h"
 #include "screen_lobby.h"
+#include "screen_game.h"
 #include "netman.h"
 using namespace std;
 

@@ -44,6 +44,15 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
             exiting = true;
             app->getNetworkManager()->sendExitLobby();
         }
+
+        // start 780 20 100 50
+        if (x >= 780 && x <= 780 + 100 &&
+            y >= 20 && y <= 20 + 50) {
+
+            // todo send host start packet
+
+            app->openScreen(4);
+        }
     }
 }
 
@@ -57,7 +66,6 @@ void LobbyScreen::handlePacket(string packet) {
     case 'I':
         cout << "Received info about lobby" << endl;
         index = packet.find_first_of('IT/');
-        cout << index << endl;
         if (index != string::npos) {
             string num = packet.substr(index + 1);
             players = stoi(num);
