@@ -86,7 +86,7 @@ void CreateScreen::handleEvent(SDL_Event& event) {
         }
 
         // In the box
-        if (name.size() >= 5 && name.size() <= 10 && x >= 350 && x <= 350 + 200 && y >= 335 && y <= 335 + 50) {
+        if (name.size() >= 3 && name.size() <= 16 && x >= 350 && x <= 350 + 200 && y >= 335 && y <= 335 + 50) {
             app->getNetworkManager()->sendCreateLobby(name, size);
             joining = true;
             return;
@@ -125,7 +125,7 @@ void CreateScreen::handlePacket(string packet) {
 void CreateScreen::update() {
     // Update text
     text = name;
-    for (int i = text.size(); i < 5; i++) {
+    for (int i = text.size(); i < 3; i++) {
         text += "_";
     }
 }
