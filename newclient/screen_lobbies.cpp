@@ -9,6 +9,8 @@
 void LobbiesScreen::init() {
     // Send a list lobbies
     ticksSinceList = 0;
+    hasSelected = false;
+    joining = false;
     app->getNetworkManager()->sendListLobbies();
 }
 
@@ -17,6 +19,9 @@ void LobbiesScreen::init() {
 * screen is currently being rendered.
 */
 void LobbiesScreen::handleEvent(SDL_Event& event) {
+    if (joining) {
+        return; // lock screen when loading.
+    }
 
     // Mouse click
     if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -29,6 +34,16 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
         // Was it in the back button?
         int x = event.button.x;
         int y = event.button.y;
+
+        // Did we click confirm? 625, 375, 200, 50
+        if (x >= 625 && x <= 625 + 200 &&
+            y >= 375 && y <= 375 + 50) {
+
+            app->getNetworkManager()->sendJoinLobby(selected.id);
+            joining = true;
+            return;
+        }
+        hasSelected = false;
 
         // back 20 20 100 50
         if (x >= 20 && x <= 20 + 100 &&
@@ -53,8 +68,9 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
 
             // is it on lobby?
             if (x >= lx && x <= lx + 200 && y >= ly && y <= ly + 200) {
-                // join lobby
-                app->openScreen(3);
+                // Show lobby info
+                selected = l;
+                hasSelected = true;
             }
         }
     }
@@ -72,11 +88,13 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void LobbiesScreen::handlePacket(string packet) {
+    size_t start;
+
     switch (packet.at(0)) {
     case 'L':
         // Clear lobbies
         lobbies.clear();
-        size_t start = packet.find_first_of("LT/");
+        start = packet.find_first_of("LT/");
 
         // Bad input
         if (start == string::npos) {
@@ -117,8 +135,10 @@ void LobbiesScreen::handlePacket(string packet) {
             Lobby lobby = { id, name, size, maxsize };
             lobbies.push_back(lobby);
         }
-            
-        
+        break;
+    case 'J':
+        app->setLobbyId(selected.id);
+        app->openScreen(3); // open lobby screen
         break;
     }
 }
@@ -193,6 +213,24 @@ void LobbiesScreen::render() {
 
     // Render the custom button
     TexMan::drawImage("assets/custom_btn.png", 430, 20, 100, 50);
+
+    // Selected
+    if (hasSelected) {
+
+        // Render confirmation box
+        TexMan::drawRect({ 17, 76, 122, 255 }, 600, 150, 250, 300);
+
+        // Render lobby name
+        TexMan::drawImage("assets/register_textbox.png", 625, 175, 200, 50);
+        TexMan::drawText(selected.name, { 255, 255, 255, 255 }, 20, 725, 200);
+
+        // Draw the capacity
+        string s = to_string(selected.size) + "/" + to_string(selected.maxsize);
+        TexMan::drawText(s, { 255, 255, 255, 255 }, 40, 725, 300);
+
+        // Draw the join button
+        TexMan::drawImage("assets/register_btn.png", 625, 375, 200, 50);
+    }
 }
 
 /**

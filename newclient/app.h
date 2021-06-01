@@ -77,6 +77,17 @@ public:
     bool isRunning() const;
 
     /**
+    * Sets the lobby id
+    */
+    void setLobbyId(int id);
+
+    /**
+    * Gets the lobby id
+    */
+    int getLobbyId();
+
+
+    /**
     * Returns the network manager
     */
     NetMan* getNetworkManager();
@@ -90,6 +101,9 @@ private:
 
     // Which screen is active?
     int activeScreenIndex;
+
+    // Which lobby ID do I have?
+    int lobbyId;
 
     // NetMan instance
     NetMan* netman;

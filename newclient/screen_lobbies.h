@@ -60,6 +60,9 @@ public:
 private:
     // List of lobbies
     vector<Lobby> lobbies;
+    Lobby selected;
+    bool hasSelected;
+    bool joining;
 
     // Scroll state variables
     int scrollY;

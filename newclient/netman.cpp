@@ -135,7 +135,7 @@ void NetMan::sendCreateLobby(string name, int size) {
     string packet = "C/";
     packet += name;
     packet += "/";
-    packet += size;
+    packet += to_string(size);
 
     // Send it
     outgoing.push_back(packet);
@@ -145,14 +145,14 @@ void NetMan::sendCreateLobby(string name, int size) {
 * Sends lobby info packet
 */
 void NetMan::sendLobbyInfo(int lobbyId) {
-    outgoing.push_back("I/" + lobbyId);
+    outgoing.push_back("I/" + to_string(lobbyId));
 }
 
 /**
 * Sends join lobby packet
 */
 void NetMan::sendJoinLobby(int lobbyId) {
-    outgoing.push_back("J/" + lobbyId);
+    outgoing.push_back("J/" + to_string(lobbyId));
 }
 
 /**

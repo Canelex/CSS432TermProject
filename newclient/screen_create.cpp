@@ -12,7 +12,25 @@ void CreateScreen::init() {}
 * screen is currently being rendered.
 */
 void CreateScreen::handleEvent(SDL_Event& event) {
+    // Mouse click
+    if (event.type == SDL_MOUSEBUTTONDOWN) {
 
+        // We only care about left clicks
+        if (event.button.button != SDL_BUTTON_LEFT) {
+            return;
+        }
+
+        // Was it in the back button?
+        int x = event.button.x;
+        int y = event.button.y;
+
+        // back 20 20 100 50
+        if (x >= 20 && x <= 20 + 100 &&
+            y >= 20 && y <= 20 + 50) {
+
+            app->openScreen(1);
+        }
+    }
 }
 
 /**
@@ -43,7 +61,7 @@ void CreateScreen::render() {
     TexMan::drawImage("assets/register_bg.png", 0, 0, 900, 600);
 
     // Render the header rect
-    TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 550, 90);
+    TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 900, 90);
 
     // Render the back button
     TexMan::drawImage("assets/back_btn.png", 20, 20, 100, 50);

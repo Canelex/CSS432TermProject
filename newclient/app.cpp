@@ -12,6 +12,8 @@
 #include "texman.h"
 #include "netman.h"
 
+size_t tries = 0;
+
 /**
 * Constructor accepts a server address and a port, which it eventually
 * passes to the network manager (which uses a thread to do networking)
@@ -75,7 +77,8 @@ void App::handleEvents() {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
         case SDL_QUIT:
-            if (netman->isConnected()) {
+            tries++;
+            if (tries < 3 && netman->isConnected()) {
                 // Try to disconnect
                 netman->sendQuitGame();
             } else {
@@ -187,6 +190,20 @@ void App::openScreen(int id) {
 */
 bool App::isRunning() const {
     return running;
+}
+
+/**
+* Sets the lobby id
+*/
+void App::setLobbyId(int id) {
+    lobbyId = id;
+}
+
+/**
+* Gets the lobby id
+*/
+int App::getLobbyId() {
+    return lobbyId;
 }
 
 /**
