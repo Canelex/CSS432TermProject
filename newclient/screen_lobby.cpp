@@ -16,6 +16,11 @@ void LobbyScreen::init() {
 * screen is currently being rendered.
 */
 void LobbyScreen::handleEvent(SDL_Event& event) {
+    if (event.type == SDL_MOUSEMOTION) {
+        mx = event.button.x;
+        my = event.button.y;
+    }
+
     if (exiting) {
         return; // don't let them do anything else
     }
@@ -47,9 +52,18 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void LobbyScreen::handlePacket(string packet) {
+    size_t index;
     switch (packet.at(0)) {
     case 'I':
         cout << "Received info about lobby" << endl;
+        index = packet.find_first_of('IT/');
+        cout << index << endl;
+        if (index != string::npos) {
+            string num = packet.substr(index + 1);
+            players = stoi(num);
+        } else {
+            players = 0;
+        }
         break;
     case 'E':
         if (packet == "ET\n") {
@@ -86,7 +100,10 @@ void LobbyScreen::render() {
     TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 900, 90);
 
     // Render the back button
-    TexMan::drawImage("assets/exit_btn.png", 20, 20, 100, 50);
+    TexMan::drawHoverImage("assets/exit_btn.png", 20, 20, 100, 50, mx, my);
+
+    // Render the number of players
+    TexMan::drawText("Players: " + to_string(players), { 255, 255, 255, 255 }, 40, 450, 300);
 }
 
 /**

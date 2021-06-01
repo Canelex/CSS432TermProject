@@ -11,6 +11,8 @@ void LobbiesScreen::init() {
     ticksSinceList = 0;
     hasSelected = false;
     joining = false;
+    scrollY = 0;
+    scrollVY = 0;
     app->getNetworkManager()->sendListLobbies();
 }
 
@@ -19,6 +21,11 @@ void LobbiesScreen::init() {
 * screen is currently being rendered.
 */
 void LobbiesScreen::handleEvent(SDL_Event& event) {
+    if (event.type == SDL_MOUSEMOTION) {
+        mx = event.button.x;
+        my = event.button.y;
+    }
+
     if (joining) {
         return; // lock screen when loading.
     }
@@ -71,6 +78,8 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
                 // Show lobby info
                 selected = l;
                 hasSelected = true;
+                // Get some more info though too
+                app->getNetworkManager()->sendListLobbies();
             }
         }
     }
@@ -134,6 +143,11 @@ void LobbiesScreen::handlePacket(string packet) {
             // Create lobby
             Lobby lobby = { id, name, size, maxsize };
             lobbies.push_back(lobby);
+
+            // Update selected too
+            if (selected.id == lobby.id) {
+                selected = lobby;
+            }
         }
         cout << "Received " << lobbies.size() << " lobbies." << endl;
         break;
@@ -196,8 +210,12 @@ void LobbiesScreen::render() {
         int x = 50 + 250 * (i % 2);
         int y = 120 + 250 * (int)(i / 2) - scrollY;
 
+        if (y > 900 || y < -200) {
+            continue; // no point drawing these.
+        }
+
         // Render the lobby bg
-        TexMan::drawImage("assets/lobby_btn.png", x, y, 200, 200);
+        TexMan::drawHoverImage("assets/lobby_btn.png", x, y, 200, 200, mx, my);
 
         // Draw the name
         TexMan::drawText(l.name, { 255, 255, 255, 255 }, 20, x + 100, y + 100);
@@ -211,10 +229,10 @@ void LobbiesScreen::render() {
     TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 550, 90);
 
     // Render the back button
-    TexMan::drawImage("assets/back_btn.png", 20, 20, 100, 50);
+    TexMan::drawHoverImage("assets/back_btn.png", 20, 20, 100, 50, mx, my);
 
     // Render the custom button
-    TexMan::drawImage("assets/custom_btn.png", 430, 20, 100, 50);
+    TexMan::drawHoverImage("assets/custom_btn.png", 430, 20, 100, 50, mx, my);
 
     // Selected
     if (hasSelected) {
@@ -231,7 +249,7 @@ void LobbiesScreen::render() {
         TexMan::drawText(s, { 255, 255, 255, 255 }, 40, 725, 300);
 
         // Draw the join button
-        TexMan::drawImage("assets/register_btn.png", 625, 375, 200, 50);
+        TexMan::drawHoverImage("assets/register_btn.png", 625, 375, 200, 50, mx, my);
     }
 }
 

@@ -51,5 +51,11 @@ public:
     void clean();
 
 private:
+
+    bool joining;
+
+    string name;
+
+    string text;
 };
 

@@ -53,5 +53,8 @@ public:
 private:
     // Is the player exiting the lobby?
     bool exiting;
+
+    // Number of players (todo: names)
+    int players;
 };
 

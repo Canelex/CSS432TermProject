@@ -5,13 +5,54 @@
 * is used to load all assets and objects needed for the
 * screen.
 */
-void CreateScreen::init() {}
+void CreateScreen::init() {
+    name = "";
+    text = "";
+}
 
 /**
 * This method is called whenever an event happens and this
 * screen is currently being rendered.
 */
 void CreateScreen::handleEvent(SDL_Event& event) {
+    if (event.type == SDL_MOUSEMOTION) {
+        mx = event.button.x;
+        my = event.button.y;
+    }
+
+    if (joining) {
+        return;
+    }
+
+    // Key press
+    if (event.type == SDL_KEYDOWN) {
+        string key = SDL_GetKeyName(event.key.keysym.sym);
+
+        // Erase key
+        if (key == "Backspace" && name.size() > 0) {
+            name = name.substr(0, name.size() - 1);
+        }
+
+        // Key is too long
+        if (key.size() > 1) {
+            return;
+        }
+
+        // Name is too long
+        if (name.size() >= 10) {
+            return;
+        }
+        
+        if (key == "Space") {
+            name += " ";
+        }
+
+        // Valid key
+        if ((key >= "A" && key <= "Z") || (key >= "0" && key <= "9")) {
+            name += key;
+        }
+    }
+
     // Mouse click
     if (event.type == SDL_MOUSEBUTTONDOWN) {
 
@@ -30,6 +71,14 @@ void CreateScreen::handleEvent(SDL_Event& event) {
 
             app->openScreen(1);
         }
+
+        // Not in the box (horizontal)
+        if (name.size() >= 5 && name.size() <= 10 && x >= 350 && x <= 350 + 200 && y >= 305 || y <= 305 + 50) {
+            app->getNetworkManager()->sendCreateLobby(name, 5);
+            joining = true;
+            return;
+        }
+       
     }
 }
 
@@ -38,7 +87,21 @@ void CreateScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void CreateScreen::handlePacket(string packet) {
-
+    size_t index;
+    switch (packet.at(0)) {
+    case 'C':
+        cout << "Created a lobby" << endl;
+        index = packet.find_first_of('CT/');
+        cout << index << endl;
+        if (index != string::npos) {
+            string num = packet.substr(index + 1);
+            int lobbyId = stoi(num);
+            app->setLobbyId(lobbyId);
+            app->openScreen(3);
+        }
+        
+        break;
+    }
 }
 
 /**
@@ -47,7 +110,11 @@ void CreateScreen::handlePacket(string packet) {
 * a second (once per frame) when the screen is active
 */
 void CreateScreen::update() {
-
+    // Update text
+    text = name;
+    for (int i = text.size(); i < 5; i++) {
+        text += "_";
+    }
 }
 
 /**
@@ -65,6 +132,18 @@ void CreateScreen::render() {
 
     // Render the back button
     TexMan::drawImage("assets/back_btn.png", 20, 20, 100, 50);
+
+    // Render the center square
+    TexMan::drawRect({ 17, 76, 122, 255 }, 300, 150, 300, 300);
+
+    // Render the textbox
+    TexMan::drawImage("assets/register_textbox.png", 350, 245, 200, 50);
+
+    // Render the text
+    TexMan::drawText(text, { 255, 255, 255, 255 }, 24, 450, 270);
+
+    // Render the button
+    TexMan::drawHoverImage("assets/register_btn.png", 350, 305, 200, 50, mx, my);
 }
 
 /**

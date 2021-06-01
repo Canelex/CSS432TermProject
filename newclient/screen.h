@@ -72,5 +72,9 @@ public:
 protected:
     // Reference to app object
     App* app;
+
+    // Mouse position
+    int mx;
+    int my;
 };
 

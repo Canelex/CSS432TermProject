@@ -36,6 +36,21 @@ void TexMan::drawImage(string path, int x, int y, int w, int h) {
 }
 
 /**
+* This function renders an image using the current renderer.
+* Does caching using the textures map
+*/
+void TexMan::drawHoverImage(string path, int x, int y, int w, int h, int mx, int my) {
+    // Render the image
+    drawImage(path, x, y, w, h);
+
+    // Render overlay
+    if (mx >= x && mx <= x + w && my >= y && my <= y + h) {
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        drawRect({ 255, 255, 255, 30 }, x, y, w, h);
+    }
+}
+
+/**
 * This function renders a rectangle using the current renderer.
 */
 void TexMan::drawRect(SDL_Color color, int x, int y, int w, int h) {

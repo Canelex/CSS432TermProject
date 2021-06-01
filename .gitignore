@@ -1,6 +1,7 @@
 .vs
 */.vs
 */Debug
+test
 
 *.vcxproj
 *.vcxproj.filters

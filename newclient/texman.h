@@ -22,6 +22,12 @@ public:
     static void drawImage(string path, int x, int y, int w, int h);
 
     /**
+    * This function renders an image using the current renderer.
+    * Does caching using the textures map
+    */
+    static void drawHoverImage(string path, int x, int y, int w, int h, int mx, int my);
+
+    /**
     * This function renders a rectangle using the current renderer.
     */
     static void drawRect(SDL_Color color, int x, int y, int w, int h);

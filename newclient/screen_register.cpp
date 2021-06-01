@@ -19,6 +19,11 @@ void RegisterScreen::init() {
 * screen is currently being rendered.
 */
 void RegisterScreen::handleEvent(SDL_Event& event) {
+    if (event.type == SDL_MOUSEMOTION) {
+        mx = event.button.x;
+        my = event.button.y;
+    }
+
     // Key press
     if (event.type == SDL_KEYDOWN) {
         string key = SDL_GetKeyName(event.key.keysym.sym);
@@ -130,7 +135,7 @@ void RegisterScreen::render() {
     TexMan::drawText(text, { 255, 255, 255, 255 }, 24, 450, 270);
 
     // Render the button
-    TexMan::drawImage("assets/register_btn.png", 350, 305, 200, 50);
+    TexMan::drawHoverImage("assets/register_btn.png", 350, 305, 200, 50, mx, my);
 }
 
 /**
