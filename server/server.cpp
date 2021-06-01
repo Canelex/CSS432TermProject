@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <sys/time.h>
+#include <random>
 #include "lobby.h"
 //using namespace std;
 
@@ -43,6 +44,8 @@ void exitLobby(char* buf, player* p);
 void playerInLobbyCheck(player* p);
 
 void updateNumLobbyPlayers(lobby* l);
+
+int lobbyIDGen();
 
 int main () 
 {
@@ -193,13 +196,13 @@ void* serviceConnection(void* newSd)
         {
             case 'R':
                 gettimeofday(&tv, NULL);
-                if(p != NULL)
+                /*if(p != NULL)
                 {
                     std::cout << "Client trying to double register a player" << std::endl;
                     std::string message = "RF\n";
                     write(p->getPlayerSocket(), message.c_str(), message.length());
                     break;
-                }
+                }*/
                 std::cout << "Registering Player" << std::endl;
                 p = registration(buf, fd);
                 break;
@@ -287,7 +290,7 @@ void listLobbies(player* p)//Lists all lobbies in the game
         std::cout << "Client connection is trying to access lobby services before registration" << std::endl;
         return;
     }
-    std::string message = "L/";
+    std::string message = "LT/";
     for(lobby* l: lobbies)
     {
         message.append(std::to_string(l->getLobbyId()));
@@ -342,7 +345,7 @@ void createLobby(char* buf, player* p)//Creates a new lobby and adds the player 
     lobby* l = new lobby();
     l->setLobbyName(name);
     l->setLobbySize(size);
-    l->setLobbyId(20); //placeholder until can add code for random two digit integer
+    l->setLobbyId(lobbyIDGen());
     l->addPlayer(p);
     p->setInLobby(true);
     lobbies.push_back(l);
@@ -500,5 +503,27 @@ void updateNumLobbyPlayers(lobby* l)//Sends an information message to all player
         message += "\n";
         write(p->getPlayerSocket(), message.c_str(), message.length());
     }
+}
+
+int lobbyIDGen()//Creates random integer from 3 to 99 which is unique to the lobby
+{
+    bool isUnique = false;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> randomInt(3,99);
+    label:
+    int lobbyIDVal = randomInt(gen);
+    while(!isUnique)
+    {
+        for(lobby* l: lobbies)
+        {
+            if(l->getLobbyId() == lobbyIDVal)
+            {
+                goto label;
+            }
+        }
+        isUnique = true;
+    }
+    return lobbyIDVal;
 }
 
