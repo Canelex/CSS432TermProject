@@ -50,7 +50,6 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
             joining = true;
             return;
         }
-        hasSelected = false;
 
         // back 20 20 100 50
         if (x >= 20 && x <= 20 + 100 &&
@@ -148,6 +147,10 @@ void LobbiesScreen::handlePacket(string packet) {
             if (selected.id == lobby.id) {
                 selected = lobby;
             }
+            if (!hasSelected) {
+                selected = lobby;
+                hasSelected = true;
+            }
         }
         cout << "Received " << lobbies.size() << " lobbies." << endl;
         break;
@@ -212,6 +215,10 @@ void LobbiesScreen::render() {
 
         if (y > 900 || y < -200) {
             continue; // no point drawing these.
+        }
+
+        if (selected.id == l.id) {
+            TexMan::drawRect({ 255, 255, 255, 255 }, x - 2, y - 2, 200 + 4, 200 + 4);
         }
 
         // Render the lobby bg

@@ -57,5 +57,9 @@ private:
     string name;
 
     string text;
+
+    int sizes[5] = { 2, 3, 4, 5, 10 };
+
+    int size = 4;
 };
 

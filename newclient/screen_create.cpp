@@ -8,6 +8,7 @@
 void CreateScreen::init() {
     name = "";
     text = "";
+    joining = false;
 }
 
 /**
@@ -33,18 +34,18 @@ void CreateScreen::handleEvent(SDL_Event& event) {
             name = name.substr(0, name.size() - 1);
         }
 
-        // Key is too long
-        if (key.size() > 1) {
+        // Name is too long
+        if (name.size() >= 16) {
             return;
         }
 
-        // Name is too long
-        if (name.size() >= 10) {
-            return;
-        }
-        
         if (key == "Space") {
             name += " ";
+        }
+
+        // Key is too long
+        if (key.size() > 1) {
+            return;
         }
 
         // Valid key
@@ -72,9 +73,21 @@ void CreateScreen::handleEvent(SDL_Event& event) {
             app->openScreen(1);
         }
 
-        // Not in the box (horizontal)
-        if (name.size() >= 5 && name.size() <= 10 && x >= 350 && x <= 350 + 200 && y >= 305 || y <= 305 + 50) {
-            app->getNetworkManager()->sendCreateLobby(name, 5);
+        // check collisions
+        for (int i = 0; i < 5; i++) {
+
+            int bx = 350 + i * 42;
+            int by = 283;
+
+            if (x >= bx && x <= bx + 32 && y >= by && y <= by + 32) {
+                size = sizes[i];
+                return;
+            }
+        }
+
+        // In the box
+        if (name.size() >= 5 && name.size() <= 10 && x >= 350 && x <= 350 + 200 && y >= 335 && y <= 335 + 50) {
+            app->getNetworkManager()->sendCreateLobby(name, size);
             joining = true;
             return;
         }
@@ -99,7 +112,7 @@ void CreateScreen::handlePacket(string packet) {
             app->setLobbyId(lobbyId);
             app->openScreen(3);
         }
-        
+        joining = false;
         break;
     }
 }
@@ -131,19 +144,35 @@ void CreateScreen::render() {
     TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 900, 90);
 
     // Render the back button
-    TexMan::drawImage("assets/back_btn.png", 20, 20, 100, 50);
+    TexMan::drawHoverImage("assets/back_btn.png", 20, 20, 100, 50, mx, my);
 
     // Render the center square
     TexMan::drawRect({ 17, 76, 122, 255 }, 300, 150, 300, 300);
 
     // Render the textbox
-    TexMan::drawImage("assets/register_textbox.png", 350, 245, 200, 50);
+    TexMan::drawImage("assets/register_textbox.png", 350, 215, 200, 50);
 
     // Render the text
-    TexMan::drawText(text, { 255, 255, 255, 255 }, 24, 450, 270);
+    TexMan::drawText(text, { 255, 255, 255, 255 }, 18, 450, 240);
+
+    // Render the size buttons
+    for (int i = 0; i < 5; i++) {
+
+        int x = 350 + i * 42;
+        int y = 283;
+
+        if (sizes[i] == size) {
+            TexMan::drawRect({ 255, 255, 255, 255 }, x-2, y-2, 36, 36);
+        }
+
+        // Render the textbox
+        TexMan::drawHoverImage("assets/small_btn.png", x, y, 32, 32, mx, my);
+
+        TexMan::drawText(to_string(sizes[i]), { 255, 255, 255, 255 }, 10, x+16, y+16);
+    }
 
     // Render the button
-    TexMan::drawHoverImage("assets/register_btn.png", 350, 305, 200, 50, mx, my);
+    TexMan::drawHoverImage("assets/register_btn.png", 350, 335, 200, 50, mx, my);
 }
 
 /**
