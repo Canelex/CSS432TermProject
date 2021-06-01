@@ -19,7 +19,7 @@
 * passes to the network manager (which uses a thread to do networking)
 */
 App::App(const char* address, int port) {
-    netman = NetMan(address, port);
+    netman = new NetMan(address, port);
 }
 
 /* Initialization function for starting the game */
@@ -86,8 +86,8 @@ void App::handleEvents() {
 * It is called by the update function.
 */
 void App::handlePackets() {
-    while (netman.hasNextPacket()) {
-        string p = netman.poll();
+    while (netman->hasNextPacket()) {
+        string p = netman->poll();
         if (p.length() > 0) {
             screens[activeScreenIndex]->handlePacket(p);
         }
@@ -102,7 +102,15 @@ void App::update() {
     // Dequeue some packets
     handlePackets();
 
+    // Update screen
     screens[activeScreenIndex]->update();
+
+    // Change title to say if connected
+    if (netman->isConnected()) {
+        SDL_SetWindowTitle(window, "Term Project [Connected]");
+    } else {
+        SDL_SetWindowTitle(window, "Term Project [Disconnected]");
+    }
 }
 
 /**
@@ -128,9 +136,17 @@ void App::render() {
 * by the main process after the game has completed.
 */
 void App::clean() {
+    // Destroy the window
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
+
+    // Deallocate the netman
+    if (netman != nullptr) {
+        delete netman;
+        netman = nullptr;
+    }
+
     cout << "Game cleaned." << endl;
 }
 
@@ -160,6 +176,6 @@ bool App::isRunning() const {
 /**
 * Returns the network manager
 */
-NetMan& App::getNetworkManager() {
+NetMan* App::getNetworkManager() {
     return netman;
 }

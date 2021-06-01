@@ -75,7 +75,7 @@ public:
     /**
     * Returns the network manager
     */
-    NetMan& getNetworkManager();
+    NetMan* getNetworkManager();
 
 private:
     // Is the game running?
@@ -88,7 +88,7 @@ private:
     int activeScreenIndex;
 
     // NetMan instance
-    NetMan netman;
+    NetMan* netman;
 
     // SDL window pointer
     SDL_Window* window;

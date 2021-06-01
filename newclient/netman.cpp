@@ -51,6 +51,12 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
 
         // Success! Let's keep reading packets
         while (true) {
+            if (incoming == nullptr || outgoing == nullptr) {
+                // Kill the thread
+                cout << "Thread killed." << endl;
+                return;
+            }
+
             // Are there packets to send?
             if (!outgoing->empty()) {
                 // Dequeue front packet
@@ -81,16 +87,14 @@ void packetHandler(const char* address, int port, vector<string>* incoming, vect
 }
 
 
-/* Default constructor */
-NetMan::NetMan() {
-
-}
-
 /**
 * Parameterized constructor that sets up socket and starts
 * packet handler thread
 */
 NetMan::NetMan(const char* address, int port) {
+    // Not connected by default
+    connected = false;
+
     // Create queues
     incoming = new vector<string>();
     outgoing = new vector<string>();
@@ -106,7 +110,17 @@ NetMan::NetMan(const char* address, int port) {
 * Destructor for network manager
 */
 NetMan::~NetMan() {
+    cout << "Destroying netman" << endl;
 
+    if (incoming != nullptr) {
+        delete incoming;
+        incoming = nullptr;
+    }
+
+    if (outgoing != nullptr) {
+        delete outgoing;
+        outgoing = nullptr;
+    }
 }
 
 /**
@@ -178,6 +192,10 @@ bool NetMan::isConnected() const {
 * the queue
 */
 bool NetMan::hasNextPacket() {
+    if (incoming == nullptr) {
+        return false;
+    }
+
     return !incoming->empty();
 }
 
@@ -185,6 +203,10 @@ bool NetMan::hasNextPacket() {
  * Dequeues the most recent incoming packet and returns it.
  */
 string NetMan::poll() {
+    if (incoming == nullptr) {
+        return "";
+    }
+
     if (incoming->empty()) {
         return "";
     }

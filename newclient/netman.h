@@ -22,8 +22,6 @@ using namespace std;
 class NetMan
 {
 public:
-    /* Default constructor */
-    NetMan();
 
     /**
     * Parameterized constructor that sets up socket and starts
