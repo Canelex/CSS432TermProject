@@ -50,6 +50,9 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
             cout << "Font initialized!" << endl;
         }
 
+        // Setup texman
+        TexMan::setRenderer(renderer);
+
         // Create some screens
         activeScreenIndex = -1;
         screens.push_back(new RegisterScreen(this, renderer));

@@ -4,6 +4,8 @@
 struct Lobby {
     int id;
     string name;
+    int size;
+    int maxsize;
 };
 
 class LobbiesScreen : public Screen
@@ -54,22 +56,14 @@ public:
     void clean();
 
 private:
-    // Background objects
-    SDL_Rect rectBG;
-    SDL_Texture* texBG;
-
-    // Back button
-    SDL_Rect rectBack;
-    SDL_Texture* texBack;
-
-    // List of servers
-    SDL_Texture* texLobby;
+    // List of lobbies
     vector<Lobby> lobbies;
+
+    // Scroll state variables
     int scrollY;
     float scrollVY;
 
-    // Custom Lobby button
-    SDL_Texture* texCustom;
-    SDL_Rect rectCustom;
+    // Ticks since last query
+    int ticksSinceList;
 };
 
