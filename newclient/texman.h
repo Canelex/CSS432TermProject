@@ -39,6 +39,11 @@ public:
     static void drawText(string text, SDL_Color color, int fontSize, int x, int y);
 
     /**
+    * This function will set the clip rect.
+    */
+    static void clip(bool enabled, int x, int y, int w, int h);
+
+    /**
     * This function cleans the cache and font.
     */
     static void cleanup();

@@ -138,16 +138,16 @@ void CreateScreen::update() {
 void CreateScreen::render() {
 
     // Render the background
-    TexMan::drawImage("assets/register_bg.png", 0, 0, 900, 600);
+    TexMan::drawImage("assets/bg.png", 0, 0, 900, 600);
 
     // Render the header rect
-    TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 900, 90);
+    TexMan::drawRect({ 0, 0, 0, 180 }, 0, 0, 900, 90);
 
     // Render the back button
     TexMan::drawHoverImage("assets/back_btn.png", 20, 20, 100, 50, mx, my);
 
     // Render the center square
-    TexMan::drawRect({ 17, 76, 122, 255 }, 300, 150, 300, 300);
+    TexMan::drawRect({ 0, 0, 0, 180 }, 300, 150, 300, 300);
 
     // Render the textbox
     TexMan::drawImage("assets/register_textbox.png", 350, 215, 200, 50);

@@ -8,6 +8,7 @@ struct Lobby {
     string name;
     int size;
     int maxsize;
+    bool pinned;
 };
 
 class LobbiesScreen : public Screen

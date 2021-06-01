@@ -45,7 +45,6 @@ void TexMan::drawHoverImage(string path, int x, int y, int w, int h, int mx, int
 
     // Render overlay
     if (mx >= x && mx <= x + w && my >= y && my <= y + h) {
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
         drawRect({ 255, 255, 255, 30 }, x, y, w, h);
     }
 }
@@ -55,6 +54,7 @@ void TexMan::drawHoverImage(string path, int x, int y, int w, int h, int mx, int
 */
 void TexMan::drawRect(SDL_Color color, int x, int y, int w, int h) {
     // Render the rect
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     SDL_Rect rect = { x, y, w, h };
     SDL_RenderFillRect(renderer, &rect);
@@ -82,6 +82,19 @@ void TexMan::drawText(string text, SDL_Color color, int fontSize, int x, int y) 
     SDL_FreeSurface(tmp);
     SDL_DestroyTexture(tex);
     TTF_CloseFont(font);
+}
+
+/**
+* This function will set the clip rect.
+*/
+void TexMan::clip(bool enabled, int x, int y, int w, int h) {
+    if (!enabled) {
+        SDL_RenderSetClipRect(renderer, NULL);
+        return;
+    }
+
+    SDL_Rect rect = { x, y, w, h };
+    SDL_RenderSetClipRect(renderer, &rect);
 }
 
 /**

@@ -140,7 +140,7 @@ void LobbiesScreen::handlePacket(string packet) {
             packet = packet.substr(index + 1);
 
             // Create lobby
-            Lobby lobby = { id, name, size, maxsize };
+            Lobby lobby = { id, name, size, maxsize, i < 3 }; // first 3 are pinned
             lobbies.push_back(lobby);
 
             // Update selected too
@@ -169,7 +169,7 @@ void LobbiesScreen::handlePacket(string packet) {
 */
 void LobbiesScreen::update() {
 
-    int height = (int)(lobbies.size() / 2) * 250 + 370;
+    int height = (int)ceil(lobbies.size() * 0.5) * 250 + 120;
     int maxScrollY = height - 600;
 
     if (maxScrollY > 0) {
@@ -200,12 +200,13 @@ void LobbiesScreen::update() {
 void LobbiesScreen::render() {
 
     // Render the background
-    TexMan::drawImage("assets/register_bg.png", 0, 0, 900, 600);
+    TexMan::drawImage("assets/bg.png", 0, 0, 900, 600);
 
     // Render the lobby list background
-    TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 550, 600);
+    TexMan::drawRect({ 0, 0, 0, 180 }, 0, 0, 550, 600);
 
     // Render each lobby
+    TexMan::clip(true, 0, 90, 550, 600-90);
     for (int i = 0; i < lobbies.size(); i++) {
         Lobby l = lobbies[i];
 
@@ -230,10 +231,13 @@ void LobbiesScreen::render() {
         // Draw the capacity
         string s = to_string(l.size) + "/" + to_string(l.maxsize);
         TexMan::drawText(s, { 255, 255, 255, 255 }, 15, x + 175, y + 25);
-    }
 
-    // Render the header rect
-    TexMan::drawRect({ 17, 76, 122, 255 }, 0, 0, 550, 90);
+        // Draw pin icon if needed
+        if (l.pinned) {
+            TexMan::drawImage("assets/pin.png", x + 10, y + 15, 25, 25);
+        }
+    }
+    TexMan::clip(false, 0, 0, 0, 0);
 
     // Render the back button
     TexMan::drawHoverImage("assets/back_btn.png", 20, 20, 100, 50, mx, my);
@@ -245,7 +249,7 @@ void LobbiesScreen::render() {
     if (hasSelected) {
 
         // Render confirmation box
-        TexMan::drawRect({ 17, 76, 122, 255 }, 600, 150, 250, 300);
+        TexMan::drawRect({ 0, 0, 0, 180 }, 600, 150, 250, 300);
 
         // Render lobby name
         TexMan::drawImage("assets/register_textbox.png", 625, 175, 200, 50);
@@ -254,6 +258,7 @@ void LobbiesScreen::render() {
         // Draw the capacity
         string s = to_string(selected.size) + "/" + to_string(selected.maxsize);
         TexMan::drawText(s, { 255, 255, 255, 255 }, 40, 725, 300);
+
 
         // Draw the join button
         TexMan::drawHoverImage("assets/register_btn.png", 625, 375, 200, 50, mx, my);
