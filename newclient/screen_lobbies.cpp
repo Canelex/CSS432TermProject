@@ -97,67 +97,59 @@ void LobbiesScreen::handleEvent(SDL_Event& event) {
 */
 void LobbiesScreen::handlePacket(string packet) {
     size_t start;
+    Lobby lobby;
+    vector<string> entries;
+    vector<string> parts;
 
     switch (packet.at(0)) {
     case 'L':
         // Clear lobbies
         lobbies.clear();
-        start = packet.find_first_of("LT/");
+        
+        // Split packet into entries
+        entries = NetMan::split(packet, "\n");
+        for (string entry : entries) {
+            // Split entry into parts
+            parts = NetMan::split(entry, "/");
 
-        // Bad input
-        if (start == string::npos) {
-            return;
-        }
+            cout << "Lobby List Entry: " << entry << endl;
 
-        // Cut out the LT/
-        packet = packet.substr(start + 3);
-
-        // Maximum of 100 lobbies
-        size_t index;
-        for (int i = 0; i < 100; i++) {
-            // Parse ID
-            index = packet.find_first_of('/');
-            if (index == string::npos) break;
-            int id = stoi(packet.substr(0, index));
-            packet = packet.substr(index + 1);
-
-            // Parse name
-            index = packet.find_first_of('/');
-            if (index == string::npos) break;
-            string name = packet.substr(0, index);
-            packet = packet.substr(index + 1);
-
-            // Parse size
-            index = packet.find_first_of('/');
-            if (index == string::npos) break;
-            int size = stoi(packet.substr(0, index));
-            packet = packet.substr(index + 1);
-
-            // Parse maxsize
-            index = packet.find_first_of('\n');
-            if (index == string::npos) break;
-            int maxsize = stoi(packet.substr(0, index));
-            packet = packet.substr(index + 1);
-
-            // Create lobby
-            Lobby lobby = { id, name, size, maxsize, i < 3 }; // first 3 are pinned
-            lobbies.push_back(lobby);
-
-            // Update selected too
-            if (selected.id == lobby.id) {
-                selected = lobby;
+            lobby = {};
+            if (parts.size() == 6) { 
+                // Has LT/
+                lobby.id = stoi(parts[1]);
+                lobby.name = parts[2];
+                lobby.size = stoi(parts[3]);
+                lobby.maxsize = stoi(parts[4]);
+                lobby.playing = stoi(parts[5]);
+                lobby.pinned = lobby.id <= 3 ? true : false;
+                lobbies.push_back(lobby);
             }
-            if (!hasSelected) {
-                selected = lobby;
-                hasSelected = true;
+            else if (parts.size() == 5) {
+                // Regular ol' entry
+                lobby.id = stoi(parts[0]);
+                lobby.name = parts[1];
+                lobby.size = stoi(parts[2]);
+                lobby.maxsize = stoi(parts[3]);
+                lobby.playing = stoi(parts[4]);
+                lobby.pinned = lobby.id <= 3 ? true : false;
+                lobbies.push_back(lobby);
+            }
+            else {
+                cout << "Received malformed lobby info packet." << endl;
             }
         }
-        cout << "Received " << lobbies.size() << " lobbies." << endl;
         break;
     case 'J':
-        cout << "Joining lobby " << selected.id << "..." << endl;
-        app->setLobbyId(selected.id);
-        app->openScreen(3); // open lobby screen
+        if (packet == "JT\n") {
+            cout << "Joining lobby " << selected.id << "..." << endl;
+            app->setLobby(selected.id, selected.name, selected.maxsize);
+            app->openScreen(3); // open lobby screen
+        }
+        else {
+            cout << "Failed to join lobby" << endl;
+        }
+        joining = false;
         break;
     }
 }
@@ -227,6 +219,11 @@ void LobbiesScreen::render() {
 
         // Draw the name
         TexMan::drawText(l.name, { 255, 255, 255, 255 }, 20, x + 100, y + 100);
+        if (l.playing) {
+            TexMan::drawText("(Playing)", { 255, 255, 255, 255 }, 15, x + 100, y + 120);
+        } else if (l.size == l.maxsize) {
+            TexMan::drawText("(Full)", { 255, 255, 255, 255 }, 15, x + 100, y + 120);
+        }
 
         // Draw the capacity
         string s = to_string(l.size) + "/" + to_string(l.maxsize);

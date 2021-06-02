@@ -1,4 +1,5 @@
 #include "lobby.h"
+#include <iostream>
 
 std::vector<player*> lobby::getPlayers()
 {
@@ -118,12 +119,27 @@ void lobby::updatePlayersPos()
                 newPos += 1;
                 p->setYPos(newPos);
                 break;
-            case 3:
+            default:
                 newPos = p->getPlayerXPos();
                 newPos -= 1;
                 p->setXPos(newPos);
                 break;
         }
+
+        if (p->getPlayerXPos() >= 50) {
+            p->setXPos(0);
+        }
+        if (p->getPlayerYPos() >= 50) {
+            p->setYPos(0);
+        }
+        if (p->getPlayerXPos() < 0) {
+            p->setXPos(49);
+        }
+        if (p->getPlayerYPos() < 0) {
+            p->setYPos(49);
+        }
+
+        std::cout << p->getPlayerName() << " is at " << p->getPlayerXPos() << "," << p->getPlayerYPos() << std::endl;
     }
 }
 

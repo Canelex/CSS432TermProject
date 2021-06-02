@@ -62,31 +62,32 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
 */
 void LobbyScreen::handlePacket(string packet) {
 
+    vector<string> entries;
+    vector<string> parts;
     size_t index;
     switch (packet.at(0)) {
     case 'I':
         cout << "Received info about lobby" << endl;
-        index = packet.find_first_of('IT/');
-        if (index != string::npos) {
-            string str = packet.substr(index + 1);
-            cout << str << endl;
+        players.clear();
 
-            // Maximum of 100 lobbies
-            /*size_t index;
-            for (int i = 0; i < 100; i++) {
-                // Parse ID
-                index = packet.find_first_of('/');
-                if (index == string::npos) break;
-                int id = stoi(packet.substr(0, index));
-                packet = packet.substr(index + 1);
-
-                // Parse name
-                index = packet.find_first_of('/');
-                if (index == string::npos) break;
-                string name = packet.substr(0, index);
-                packet = packet.substr(index + 1);
-            }*/
+        // Split packet into entries
+        entries = NetMan::split(packet, "\n");
+        for (string entry : entries) {
+            // Split entry into part
+            parts = NetMan::split(entry, "/");
+            cout << "Lobby Info Entry: " << entry << endl;
+            
+            if (parts.size() == 3) {
+                // Has IT/
+                players.push_back(parts[2]);
+            } else if (parts.size() == 2) {
+                // Regular ol' entry
+                players.push_back(parts[1]);
+            } else {
+                cout << "Received malformed lobby info packet." << endl;
+            }
         }
+
         break;
     case 'E':
         if (packet == "ET\n") {
@@ -136,8 +137,20 @@ void LobbyScreen::render() {
     // Render the start button
     TexMan::drawHoverImage("assets/start_btn.png", 780, 20, 100, 50, mx, my);
 
+    // Render the player list background
+    TexMan::drawRect({ 0, 0, 0, 180}, 300, 150, 300, 400);
+    // Render the title
+    TexMan::drawText(app->getLobbyName(), { 255, 255, 255, 255 }, 35, 450, 200);
+
     // Render the number of players
-    //TexMan::drawText("Players: " + to_string(players), { 255, 255, 255, 255 }, 40, 450, 300);
+    for (int i = 0; i < app->getLobbyMaxSize(); i++) {
+        
+        if (i < players.size()) {
+            TexMan::drawText(players[i], { 255, 255, 255, 255 }, 20, 450, 250 + i * 25);
+        } else {
+            TexMan::drawText("[Empty]", { 200, 200, 200, 255 }, 20, 450, 250 + i * 25);
+        }
+    }
 }
 
 /**

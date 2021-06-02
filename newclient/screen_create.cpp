@@ -101,18 +101,21 @@ void CreateScreen::handleEvent(SDL_Event& event) {
 */
 void CreateScreen::handlePacket(string packet) {
     size_t index;
+    vector<string> parts;
     switch (packet.at(0)) {
     case 'C':
         cout << "Created a lobby" << endl;
-        index = packet.find_first_of('CT/');
-        cout << index << endl;
-        if (index != string::npos) {
-            string num = packet.substr(index + 1);
-            int lobbyId = stoi(num);
-            app->setLobbyId(lobbyId);
+        parts = NetMan::split(packet, "/");
+
+        if (parts.size() == 2) {
+            int lobbyId = stoi(parts[1]);
+            app->setLobby(lobbyId, name, size);
             app->openScreen(3);
+            joining = false;
+        } else {
+            cout << "Malformed create lobby response" << endl;
+            joining = false;
         }
-        joining = false;
         break;
     }
 }

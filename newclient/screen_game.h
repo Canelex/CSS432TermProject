@@ -62,6 +62,7 @@ private:
     Player player;
     string winner;
     bool gameover;
+    int ticksSinceWin;
 
     map<int, SDL_Color> colors;
 

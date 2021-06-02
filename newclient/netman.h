@@ -111,6 +111,11 @@ public:
     */
     friend void packetHandler(const char* address, int port, NetMan& net);
 
+    /**
+    * Static helper for splitting packets
+    */
+    static vector<string> split(string source, string delim);
+
 private:
     // Is the netman connected to server?
     bool connected;

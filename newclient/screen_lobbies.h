@@ -3,12 +3,14 @@
 #include "screen.h"
 #include <string>
 
+// Lobby struct
 struct Lobby {
     int id;
     string name;
     int size;
     int maxsize;
     bool pinned;
+    bool playing;
 };
 
 class LobbiesScreen : public Screen

@@ -19,7 +19,7 @@
 
 const unsigned int BUF_SIZE = 65535;
 
-//pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 int PLAYER_ID = 0;
 
@@ -274,6 +274,7 @@ void* serviceConnection(void* newSd)
         memset(buf, '\0', sizeof(buf));
         if(p != NULL && p->isInGame())
         {
+            pthread_mutex_lock(&lock);
             lobby* l = p->getMyLobby();
             if(((lap.tv_sec * 1000000) + lap.tv_usec) - ((l->lobbyTV.tv_sec * 1000000) + l->lobbyTV.tv_usec) > 65000)
             {
@@ -288,6 +289,7 @@ void* serviceConnection(void* newSd)
                 }
                 std::cout << message << std::endl;
             }
+            pthread_mutex_unlock(&lock);
         }
     }
     return NULL;
@@ -342,6 +344,7 @@ void listLobbies(player* p)//Lists all lobbies in the game
     std::string message = "LT/";
     for(lobby* l: lobbies)
     {
+        bool isInGame = l->getAlivePlayersPos().size() > 0;
         message.append(std::to_string(l->getLobbyId()));
         message += "/";
         message.append(l->getLobbyName());
@@ -349,6 +352,8 @@ void listLobbies(player* p)//Lists all lobbies in the game
         message.append(std::to_string(l->getLobbyNumPlayers()));
         message += "/";
         message.append(std::to_string(l->getLobbySize()));
+        message += "/";
+        message.append(std::to_string(isInGame));
         message.append("\n");
     }
     write(p->getPlayerSocket(), message.c_str(), message.length());
@@ -492,10 +497,17 @@ void joinLobby(char* buf, player* p)//Allows the player to join lobbies that are
             if(l->getLobbyNumPlayers() + 1 > l->getLobbySize())//Check to make sure the lobby isn't full
             {
                 std::cout << "Cannot join a lobby that is full" << std::endl;
-                message = "CF\n";
+                message = "JF\n";
                 write(p->getPlayerSocket(), message.c_str(), message.length());
                 return;
             }
+            if (l->getAlivePlayersPos().size() > 0) {
+                std::cout << "Cannot join a lobby that is playing" << std::endl;
+                message = "JF/\n";
+                write(p->getPlayerSocket(), message.c_str(), message.length());
+                return;
+            }
+
             l->addPlayer(p);
             break;
         }
@@ -643,17 +655,17 @@ void death(char* buf, player* p)
     if(l->checkForWinner())
     {
         std::cout << "Game has concluded with a winner" << std::endl;
-        //std::string message = "W/";
+        std::string message = "W/";
         player* theWinner = l->getWinner();
         if(theWinner != NULL)
         {
-            //message += theWinner->getPlayerName();
-            //message += "\n";
+            message += theWinner->getPlayerName();
+            message += "\n";
             for(player* indP: l->getPlayers())
             {
                 indP->setInGame(false);
                 indP->setAlive(true);
-                //write(indP->getPlayerSocket(), message.c_str(), message.length());
+                write(indP->getPlayerSocket(), message.c_str(), message.length());
             }
             return;
         }

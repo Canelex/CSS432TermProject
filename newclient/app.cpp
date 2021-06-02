@@ -196,8 +196,10 @@ bool App::isRunning() const {
 /**
 * Sets the lobby id
 */
-void App::setLobbyId(int id) {
+void App::setLobby(int id, string name, int maxsize) {
     lobbyId = id;
+    lobbyName = name;
+    lobbyMaxSize = maxsize;
 }
 
 /**
@@ -205,6 +207,20 @@ void App::setLobbyId(int id) {
 */
 int App::getLobbyId() {
     return lobbyId;
+}
+
+/**
+* Returns the lobby name
+*/
+string App::getLobbyName() {
+    return lobbyName;
+}
+
+/**
+* Gets the lobby maxsize
+*/
+int App::getLobbyMaxSize() {
+    return lobbyMaxSize;
 }
 
 /**

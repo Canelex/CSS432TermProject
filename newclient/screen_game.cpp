@@ -53,22 +53,22 @@ void GameScreen::handleEvent(SDL_Event& event) {
             return; // no controls for dead people
         }
 
-        if (dir != 0 && (key == "W" || key == "Up")) {
+        if (dir != 2 && dir != 0 && (key == "W" || key == "Up")) {
             app->getNetworkManager()->sendPlayerDir(0);
             dir = 0;
         }
 
-        if (dir != 1 && (key == "D" || key == "Right")) {
+        if (dir != 3 && dir != 1 && (key == "D" || key == "Right")) {
             app->getNetworkManager()->sendPlayerDir(1);
             dir = 1;
         }
 
-        if (dir != 2 && (key == "S" || key == "Down")) {
+        if (dir != 0 && dir != 2 && (key == "S" || key == "Down")) {
             app->getNetworkManager()->sendPlayerDir(2);
             dir = 2;
         }
 
-        if (dir != 3 && (key == "A" || key == "Left")) {
+        if (dir != 1 && dir != 3 && (key == "A" || key == "Left")) {
             app->getNetworkManager()->sendPlayerDir(3);
             dir = 3;
         }
@@ -80,94 +80,70 @@ void GameScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void GameScreen::handlePacket(string packet) {
-    cout << "GAME " << packet << endl;
 
-    size_t index;
-    switch (packet.at(0)) {
-    case 'E':
-        if (packet == "ET\n") {
+    // split packet into entries
+    vector<string> entries = NetMan::split(packet, "\n");
+    vector<string> parts;
+    string type;
+
+    for (string entry : entries) {
+
+        // split entry into parts
+        parts = NetMan::split(entry, "/");
+        type = parts[0];
+
+        if (type == "ET") {
             cout << "Successfully left lobby" << endl;
             app->openScreen(1);
         }
-        else {
+        if (type == "EF") {
             cout << "Failed to leave lobby" << endl;
             exiting = false;
         }
-        break;
-    case 'W':
-        index = packet.find_first_of("W/");
-        winner = packet.substr(index + 2);
-        gameover = true;
-        break;
-    case 'M':
-        for (int i = 0; i < 10; i++) {
-            try {
-                index = packet.find_first_of("M/");
+        if (type == "W") {
+            gameover = true;
+            winner = parts[1];
+            ticksSinceWin = 0;
+        }
+        if (type == "M") {
+            // Parse key data
+            int id = stoi(parts[1]);
+            int x = stoi(parts[2]);
+            int y = stoi(parts[3]);
 
-                // Bad input
-                if (index == string::npos) {
-                    break;
+            // Store player
+            Player p = {id , x, y };
+            if (id == app->getPlayerId()) {
+                // Update our player
+                if (player.id != -1) {
+                    players.push_back(player);
                 }
+                player = p;
 
-                // Cut out the M/
-                packet = packet.substr(index + 2);
+                // For each other player
+                for (int i = 0; i < players.size(); i++) {
 
-                // Parse ID
-                index = packet.find_first_of('/');
-                if (index == string::npos) break;
-                int id = stoi(packet.substr(0, index));
-                packet = packet.substr(index + 1);
+                    Player o = players[i];
 
-                // Parse x
-                index = packet.find_first_of('/');
-                if (index == string::npos) break;
-                int x = stoi(packet.substr(0, index));
-                packet = packet.substr(index + 1);
+                    // Did I collide?
+                    if (!dead && o.x == p.x && o.y == p.y) {
 
-                // Parse y
-                index = packet.find_first_of('\n');
-                if (index == string::npos) break;
-                int y = stoi(packet.substr(0, index));
-                packet = packet.substr(index + 1);
-
-                // Store player
-                Player p = { id, x, y };
-                if (id == app->getPlayerId()) {
-                    if (player.id != -1) {
-                        players.push_back(player);
+                        // send dead event
+                        app->getNetworkManager()->sendPlayerDead();
+                        dead = true;
                     }
-                    player = p;
-                    // This is our player!
-
-                    // For each other player
-                    for (int i = 0; i < players.size(); i++) {
-
-                        Player p = players[i];
-
-                        // Did I collide?
-                        if (!dead && player.x == p.x && player.y == p.y) {
-
-                            // send dead event
-                            app->getNetworkManager()->sendPlayerDead();
-                            dead = true;
-                            //winner = "Timmy";
-                        }
-                    }
-                }
-                else {
-                    // It's not, store them on map
-                    players.push_back(p);
-                }
-
-                // Do not have color for this guy
-                if (colors.find(id) == colors.end()) {
-                    colors.insert(make_pair(id, randomColor()));
                 }
             }
-            catch (exception ex) {}
+            else {
+                // It's not, store them on map
+                players.push_back(p);
+            }
+
+            // Do not have color for this guy
+            if (colors.find(id) == colors.end()) {
+                colors.insert(make_pair(id, randomColor()));
+            }
         }
-        
-        break;
     }
 }
 
@@ -177,7 +153,13 @@ void GameScreen::handlePacket(string packet) {
 * a second (once per frame) when the screen is active
 */
 void GameScreen::update() {
-
+    if (gameover && !exiting) {
+        ticksSinceWin++;
+        if (ticksSinceWin > 120) {
+            app->getNetworkManager()->sendExitLobby();
+            exiting = true;
+        }
+    }
 }
 
 /**
@@ -208,22 +190,9 @@ void GameScreen::render() {
         TexMan::drawRect(color, mx + p.x * 10, my + p.y * 10, 10, 10);
     }
 
-    // Draw each color
-    /*map<int, SDL_Color>::iterator it;
-    int y = 50;
-    for (it = colors.begin(); it != colors.end(); ++it) {
-        SDL_Color c = it->second;
-        int id = it->first;
-
-        TexMan::drawText(to_string(id), c, 20, 50, y);
-        y += 20;
-    }*/
     if (gameover) {
-        // Draw rect
-        TexMan::drawRect({ 0, 0, 0, 180 }, 100, 100, 700, 400);
-
         // Draw game over text
-        TexMan::drawText("Winner: " + winner, { 255, 255, 255, 255 }, 30, 450, 300);
+        TexMan::drawText("Winner: " + winner, { 255, 255, 255, 255 }, 50, 450, 300);
     } else if (!dead) {
         // Draw your player
         TexMan::drawRect({ 255, 255, 255, 255 }, mx + player.x * 10, my + player.y * 10, 10, 10);

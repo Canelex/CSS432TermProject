@@ -13,8 +13,8 @@ int main(int argc, char* argv[]) {
     Uint32 frameStart;
     int frameTime;
 
-    // Create an app object, initialize it
-    app = new App("167.172.239.146", 12345);
+    // Create an app object, initialize it 167.172.239.146
+    app = new App("192.168.1.151", 12345);
     app->init("Term Project", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 900, 600, false);
 
     // Start the application loop

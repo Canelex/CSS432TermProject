@@ -27,6 +27,7 @@ class Screen;
 class App
 {
 public:
+
     /**
     * Constructor accepts a server address and a port, which it eventually
     * passes to the network manager (which uses a thread to do networking)
@@ -80,12 +81,22 @@ public:
     /**
     * Sets the lobby id
     */
-    void setLobbyId(int id);
+    void setLobby(int id, string name, int maxsize);
 
     /**
     * Gets the lobby id
     */
     int getLobbyId();
+
+    /**
+    * Returns the lobby name
+    */
+    string getLobbyName();
+
+    /**
+    * Gets the lobby maxsize
+    */
+    int getLobbyMaxSize();
 
     /**
     * Sets the player id
@@ -116,6 +127,9 @@ private:
 
     // Which lobby ID do I have?
     int lobbyId;
+    string lobbyName;
+    int lobbyMaxSize;
+
     int playerId;
 
     // NetMan instance

@@ -70,7 +70,7 @@ void packetHandler(const char* address, int port, NetMan& net) {
 
                 // Pass to game
                 buffer[bytes] = 0;
-                cout << "Rec " << buffer << endl;
+                cout << "Read " << bytes << " bytes: " << buffer << endl;
                 net.incoming.push_back(string(buffer));
 
                 // See how much is in buffer
@@ -231,4 +231,24 @@ string NetMan::poll() {
     string front = incoming.front();
     incoming.erase(incoming.begin());
     return front;
+}
+
+/**
+* Static helper for splitting packets
+*/
+vector<string> NetMan::split(string source, string delim) {
+    // Cast string
+    char* cstr = const_cast<char*>(source.c_str());
+    char* current;
+
+    // Create vector
+    vector<string> arr;
+    current = strtok(cstr, delim.c_str());
+    while (current != NULL) {
+        arr.push_back(current);
+        current = strtok(NULL, delim.c_str());
+    }
+
+    // Return array
+    return arr;
 }
