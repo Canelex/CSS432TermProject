@@ -3,12 +3,12 @@
 #include "screen.h"
 #include <string>
 #include <vector>
+#include <map>
 
 struct Player {
-    SDL_Color color;
+    int id;
     int x;
     int y;
-    bool alive;
 };
 
 class GameScreen : public Screen
@@ -60,6 +60,8 @@ public:
 
 private:
     Player player;
+
+    map<int, SDL_Color> colors;
 
     vector<Player> players;
     

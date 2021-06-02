@@ -177,6 +177,13 @@ void NetMan::sendQuitGame() {
 }
 
 /**
+* Sends start game packet
+*/
+void NetMan::sendStartGame(int id) {
+    outgoing.push_back("S/" + to_string(id));
+}
+
+/**
 * Sends updated player turn
 * 0 -> up
 * 1 -> right

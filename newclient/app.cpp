@@ -73,6 +73,7 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
 * tick by the main application loop.
 */
 void App::handleEvents() {
+    
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -204,6 +205,20 @@ void App::setLobbyId(int id) {
 */
 int App::getLobbyId() {
     return lobbyId;
+}
+
+/**
+* Sets the player id
+*/
+void App::setPlayerId(int id) {
+    playerId = id;
+}
+
+/**
+* Gets the player id
+*/
+int App::getPlayerId() {
+    return playerId;
 }
 
 /**

@@ -88,15 +88,18 @@ void RegisterScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void RegisterScreen::handlePacket(string packet) {
+    size_t index;
     switch (packet.at(0)) {
         case 'R':
-            if (packet == "RT\n") {
-                cout << "Successfully registered" << endl;
+            index = packet.find_first_of("RT\n");
+            if (index != string::npos) {
+                string s = packet.substr(index + 3);
+                int id = stoi(s);
+                app->setPlayerId(id);
+                cout << "Registered as id " << id << endl;
                 app->openScreen(1);
-            }
-            if (packet == "RF\n") {
-                cerr << "Failed to register" << endl;
-                username = "";
+            } else {
+                cout << "Failed to register" << endl;
             }
             break;
     }
