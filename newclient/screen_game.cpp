@@ -20,6 +20,7 @@ void GameScreen::init() {
     player.y = 100;
     player.id = -1;
     dead = false;
+    gameover = false;
 }
 
 int dir = -1;
@@ -79,6 +80,7 @@ void GameScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void GameScreen::handlePacket(string packet) {
+    cout << "GAME " << packet << endl;
 
     size_t index;
     switch (packet.at(0)) {
@@ -92,20 +94,24 @@ void GameScreen::handlePacket(string packet) {
             exiting = false;
         }
         break;
+    case 'W':
+        index = packet.find_first_of("W/");
+        winner = packet.substr(index + 2);
+        gameover = true;
+        break;
     case 'M':
-        try {
-            index = packet.find_first_of("M/");
+        for (int i = 0; i < 10; i++) {
+            try {
+                index = packet.find_first_of("M/");
 
-            // Bad input
-            if (index == string::npos) {
-                return;
-            }
+                // Bad input
+                if (index == string::npos) {
+                    break;
+                }
 
-            // Cut out the M/
-            packet = packet.substr(index + 2);
+                // Cut out the M/
+                packet = packet.substr(index + 2);
 
-            // Maximum of 100 players
-            for (int i = 0; i < 100; i++) {
                 // Parse ID
                 index = packet.find_first_of('/');
                 if (index == string::npos) break;
@@ -132,6 +138,21 @@ void GameScreen::handlePacket(string packet) {
                     }
                     player = p;
                     // This is our player!
+
+                    // For each other player
+                    for (int i = 0; i < players.size(); i++) {
+
+                        Player p = players[i];
+
+                        // Did I collide?
+                        if (!dead && player.x == p.x && player.y == p.y) {
+
+                            // send dead event
+                            app->getNetworkManager()->sendPlayerDead();
+                            dead = true;
+                            //winner = "Timmy";
+                        }
+                    }
                 }
                 else {
                     // It's not, store them on map
@@ -143,8 +164,8 @@ void GameScreen::handlePacket(string packet) {
                     colors.insert(make_pair(id, randomColor()));
                 }
             }
+            catch (exception ex) {}
         }
-        catch (exception ex) {}
         
         break;
     }
@@ -156,20 +177,7 @@ void GameScreen::handlePacket(string packet) {
 * a second (once per frame) when the screen is active
 */
 void GameScreen::update() {
-    // Draw each player
-    for (int i = 0; i < players.size(); i++) {
 
-        // Render each player square
-        Player p = players[i];
-
-        // Did I collide?
-        if (!dead && player.x == p.x && player.y == p.y) {
-
-            // send dead event
-            //app->getNetworkManager()->sendPlayerDead();
-            //dead = true;
-        }
-    }
 }
 
 /**
@@ -201,7 +209,7 @@ void GameScreen::render() {
     }
 
     // Draw each color
-    map<int, SDL_Color>::iterator it;
+    /*map<int, SDL_Color>::iterator it;
     int y = 50;
     for (it = colors.begin(); it != colors.end(); ++it) {
         SDL_Color c = it->second;
@@ -209,9 +217,14 @@ void GameScreen::render() {
 
         TexMan::drawText(to_string(id), c, 20, 50, y);
         y += 20;
-    }
-    
-    if (!dead) {
+    }*/
+    if (gameover) {
+        // Draw rect
+        TexMan::drawRect({ 0, 0, 0, 180 }, 100, 100, 700, 400);
+
+        // Draw game over text
+        TexMan::drawText("Winner: " + winner, { 255, 255, 255, 255 }, 30, 450, 300);
+    } else if (!dead) {
         // Draw your player
         TexMan::drawRect({ 255, 255, 255, 255 }, mx + player.x * 10, my + player.y * 10, 10, 10);
     } else {

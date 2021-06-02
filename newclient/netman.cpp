@@ -55,7 +55,7 @@ void packetHandler(const char* address, int port, NetMan& net) {
             ioctlsocket(sock, FIONREAD, &howMuchInBuffer);
 
             // We have a packet waiting
-            if (howMuchInBuffer > 0) {
+            while (howMuchInBuffer > 0) {
                 // Read incoming packet
                 char buffer[256];
                 int bytes = recv(sock, buffer, sizeof(buffer), 0);
@@ -72,6 +72,9 @@ void packetHandler(const char* address, int port, NetMan& net) {
                 buffer[bytes] = 0;
                 cout << "Rec " << buffer << endl;
                 net.incoming.push_back(string(buffer));
+
+                // See how much is in buffer
+                ioctlsocket(sock, FIONREAD, &howMuchInBuffer);
             }
 
             // Are there packets to send?

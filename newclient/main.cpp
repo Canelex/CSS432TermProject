@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     int frameTime;
 
     // Create an app object, initialize it
-    app = new App("50.35.123.243", 12345);
+    app = new App("167.172.239.146", 12345);
     app->init("Term Project", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 900, 600, false);
 
     // Start the application loop

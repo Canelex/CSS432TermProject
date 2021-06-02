@@ -60,6 +60,8 @@ public:
 
 private:
     Player player;
+    string winner;
+    bool gameover;
 
     map<int, SDL_Color> colors;
 

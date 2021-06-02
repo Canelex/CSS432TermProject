@@ -67,16 +67,26 @@ void LobbyScreen::handlePacket(string packet) {
     case 'I':
         cout << "Received info about lobby" << endl;
         index = packet.find_first_of('IT/');
-        /*if (index != string::npos) {
-            string num = packet.substr(index + 1);
-            players = stoi(num);
-            // TODO: get player list
-            // Check if I'm host
-            host = true;
-        } else {
-            players = 0;
-        }*/
-        cout << packet << endl;
+        if (index != string::npos) {
+            string str = packet.substr(index + 1);
+            cout << str << endl;
+
+            // Maximum of 100 lobbies
+            /*size_t index;
+            for (int i = 0; i < 100; i++) {
+                // Parse ID
+                index = packet.find_first_of('/');
+                if (index == string::npos) break;
+                int id = stoi(packet.substr(0, index));
+                packet = packet.substr(index + 1);
+
+                // Parse name
+                index = packet.find_first_of('/');
+                if (index == string::npos) break;
+                string name = packet.substr(0, index);
+                packet = packet.substr(index + 1);
+            }*/
+        }
         break;
     case 'E':
         if (packet == "ET\n") {
