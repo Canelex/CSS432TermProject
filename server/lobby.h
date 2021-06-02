@@ -7,6 +7,8 @@
 #include "player.h"
 //using namespace std;
 
+class player;
+
 class lobby
 {
 public:
