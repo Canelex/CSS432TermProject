@@ -50,8 +50,8 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
             y >= 20 && y <= 20 + 50) {
 
             // todo send host start packet
-
-            app->openScreen(4);
+            exiting = true;
+            app->getNetworkManager()->sendStartGame(app->getLobbyId());
         }
     }
 }
@@ -82,6 +82,13 @@ void LobbyScreen::handlePacket(string packet) {
             exiting = false;
         }
         break;
+    case 'S':
+        if (packet == "ST\n") {
+            app->openScreen(4);
+            cout << "Starting game" << endl;
+        } else {
+            cout << "Failed to start game" << endl;
+        }
     }
 }
 

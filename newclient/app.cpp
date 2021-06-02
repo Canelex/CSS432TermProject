@@ -207,6 +207,20 @@ int App::getLobbyId() {
 }
 
 /**
+* Sets the player id
+*/
+void App::setPlayerId(int id) {
+    playerId = id;
+}
+
+/**
+* Gets the player id
+*/
+int App::getPlayerId() {
+    return playerId;
+}
+
+/**
 * Returns the network manager
 */
 NetMan* App::getNetworkManager() {

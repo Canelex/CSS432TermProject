@@ -87,6 +87,16 @@ public:
     */
     int getLobbyId();
 
+    /**
+    * Sets the player id
+    */
+    void setPlayerId(int id);
+
+    /**
+    * Gets the player id
+    */
+    int getPlayerId();
+
 
     /**
     * Returns the network manager
@@ -106,6 +116,7 @@ private:
 
     // Which lobby ID do I have?
     int lobbyId;
+    int playerId;
 
     // NetMan instance
     NetMan* netman;

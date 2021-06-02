@@ -70,6 +70,11 @@ public:
     void sendQuitGame();
 
     /**
+    * Sends start game packet
+    */
+    void sendStartGame(int id);
+
+    /**
     * Sends updated player turn
     * 0 -> up
     * 1 -> right
