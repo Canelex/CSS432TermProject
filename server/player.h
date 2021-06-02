@@ -42,7 +42,7 @@ private:
     lobby* myLobby = NULL;
     int x = 0;
     int y = 0;
-    int direction = -1;
+    int direction = 0;
     bool inLobby = false;
     bool inGame = false;
     bool alive = true;

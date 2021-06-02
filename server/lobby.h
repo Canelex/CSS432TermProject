@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <sys/time.h>
 #include "player.h"
 //using namespace std;
 
@@ -29,6 +30,9 @@ public:
     player* popPlayer(player* p);
     bool findPlayer(player* p);
     bool checkForWinner();
+    player* getWinner();
+
+    timeval lobbyTV;
 
 
 private:
