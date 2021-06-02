@@ -15,17 +15,14 @@ public:
     int getLobbyId();
     int getLobbySize();
     int getLobbyNumPlayers();
+    player* findPlayerPop(player* p);
+    bool findPlayer(player* p);
 
     void setLobbySize(int size);
     void setLobbyName(std::string name);
     void setLobbyId(int Id);
-
     void addPlayer(player* newPlayer);
     void update();
-    void pushPlayersInGame();
-    player* popPlayer(player* p);
-    bool findPlayer(player* p);
-    bool checkForWinner();
 
 
 private:

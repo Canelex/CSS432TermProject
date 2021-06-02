@@ -25,7 +25,7 @@ int lobby::getLobbyNumPlayers()
     return this->players.size();
 }
 
-player* lobby::popPlayer(player* p)
+player* lobby::findPlayerPop(player* p)
 {
     int i = 0;
     for(player* indP: this->players)
@@ -33,8 +33,6 @@ player* lobby::popPlayer(player* p)
         if(indP->getPlayerSocket() == p->getPlayerSocket())
         {
             this->players.erase(this->players.begin() + i);
-            p->setMyLobby(NULL);
-            p->setInLobby(false);
             return p;
         }
         i++;
@@ -73,37 +71,6 @@ void lobby::setLobbyId(int Id)
 void lobby::addPlayer(player* newPlayer)
 {
     this->players.push_back(newPlayer);
-    newPlayer->setMyLobby(this);
-    newPlayer->setInLobby(true);
 }
 
-void lobby::update()
-{
-
-}
-
-void lobby::pushPlayersInGame()
-{
-    for(player* p: this->players)
-    {
-        p->setInGame(true);
-        p->setAlive(true);
-    }
-}
-
-bool lobby::checkForWinner()
-{
-    int deadPlayers = 0;
-    for(player* p: this->players)
-    {
-        if(!p->isAlive())
-        {
-            deadPlayers++;
-        }
-        if(this->players.size() - deadPlayers == 1)
-        {
-            return true;
-        }
-    }
-    return false;
-}
+void update();
