@@ -84,7 +84,7 @@ void GameScreen::handlePacket(string packet) {
             exiting = false;
         }
         break;
-    case 'M':
+    case 'O':
         index = packet.find_first_of("M/");
 
         // Bad input
