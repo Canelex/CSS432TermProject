@@ -18,6 +18,7 @@ void GameScreen::init() {
     
     player.x = 100;
     player.y = 100;
+    player.id = -1;
     dead = false;
 }
 
@@ -72,6 +73,7 @@ void GameScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void GameScreen::handlePacket(string packet) {
+
     size_t index;
     switch (packet.at(0)) {
     case 'E':
@@ -84,7 +86,7 @@ void GameScreen::handlePacket(string packet) {
             exiting = false;
         }
         break;
-    case 'O':
+    case 'M':
         index = packet.find_first_of("M/");
 
         // Bad input
@@ -94,6 +96,8 @@ void GameScreen::handlePacket(string packet) {
 
         // Cut out the M/
         packet = packet.substr(index + 2);
+
+        cout << "pack " << packet << endl;
 
         // Maximum of 100 players
         for (int i = 0; i < 100; i++) {
@@ -118,7 +122,9 @@ void GameScreen::handlePacket(string packet) {
             // Store player
             Player p = { id, x, y };
             if (id == app->getPlayerId()) {
-                players.push_back(player);
+                if (player.id != -1) {
+                    players.push_back(player);
+                }
                 player = p;
                 // This is our player!
             } else {
@@ -130,6 +136,8 @@ void GameScreen::handlePacket(string packet) {
             if (colors.find(id) == colors.end()) {
                 colors.insert(make_pair(id, randomColor()));
             }
+
+            cout << "POS: " <<  p.x << ", " << p.y << ", " << p.id << endl;
         }
         break;
     }

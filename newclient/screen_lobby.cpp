@@ -7,8 +7,8 @@
 */
 void LobbyScreen::init() {
     // Request for data
-    //app->getNetworkManager()->sendLobbyInfo(app->getLobbyId());
     exiting = false;
+    host = true;
 }
 
 /**
@@ -46,7 +46,8 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
         }
 
         // start 780 20 100 50
-        if (x >= 780 && x <= 780 + 100 &&
+        if (players >= 0 &&
+            x >= 780 && x <= 780 + 100 &&
             y >= 20 && y <= 20 + 50) {
 
             // todo send host start packet
@@ -61,18 +62,23 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
 * the app.
 */
 void LobbyScreen::handlePacket(string packet) {
+
     size_t index;
     switch (packet.at(0)) {
     case 'I':
         cout << "Received info about lobby" << endl;
         index = packet.find_first_of('IT/');
-        if (index != string::npos) {
+        /*if (index != string::npos) {
             string num = packet.substr(index + 1);
             players = stoi(num);
             // TODO: get player list
+            // Check if I'm host
+            host = true;
         } else {
             players = 0;
-        }
+        }*/
+        cout << packet << endl;
+        players = 0;
         break;
     case 'E':
         if (packet == "ET\n") {
@@ -85,6 +91,7 @@ void LobbyScreen::handlePacket(string packet) {
         break;
     case 'S':
         if (packet == "ST\n") {
+            cout << "OPENING SCREEN 4" << endl;
             app->openScreen(4);
             cout << "Starting game" << endl;
         } else {
@@ -118,8 +125,12 @@ void LobbyScreen::render() {
     // Render the back button
     TexMan::drawHoverImage("assets/exit_btn.png", 20, 20, 100, 50, mx, my);
 
-    // Render the back button
-    TexMan::drawHoverImage("assets/start_btn.png", 780, 20, 100, 50, mx, my);
+    if (host) {
+        // Render the start button
+        TexMan::drawHoverImage("assets/start_btn.png", 780, 20, 100, 50, mx, my);
+    } else {
+        TexMan::drawText("Wait for host to start...", { 255, 255, 255, 255 }, 15, 800, 45);
+    }
 
     // Render the number of players
     TexMan::drawText("Players: " + to_string(players), { 255, 255, 255, 255 }, 40, 450, 300);

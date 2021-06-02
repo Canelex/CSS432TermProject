@@ -56,5 +56,8 @@ private:
 
     // Number of players (todo: names)
     int players;
+
+    // Am host?
+    bool host;
 };
 
