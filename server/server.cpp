@@ -301,7 +301,8 @@ player* registration(char* buf, int& fd)//Registers a player to the game. Must d
     p->setPlayerId(PLAYER_ID);
     PLAYER_ID++;
     p->setSocket(fd);
-    message = "RT\n";
+    message = "RT/";
+    message += std::to_string(p->getPlayerId());
     write(p->getPlayerSocket(), message.c_str(), message.length());
     return p;
 }
@@ -548,7 +549,7 @@ void startGame(char* buf, player* p)
 
 }
 
-void sendGameState(char* buf, player* p)//May need to send error packet
+void sendGameState(char* buf, player* p)//
 {
     if(p == NULL)
     {
