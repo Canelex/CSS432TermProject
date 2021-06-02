@@ -186,7 +186,7 @@ void* serviceConnection(void* newSd)
     while(true)
     {
         int bytesRead = read(fd, buf, BUF_SIZE);
-        if(p != NULL && p->isInGame())
+        /*if(p != NULL && p->isInGame())
         {
             gettimeofday(&lap, NULL);
             if(bytesRead == 0 || bytesRead == -1)
@@ -194,7 +194,7 @@ void* serviceConnection(void* newSd)
                 goto label2;
             }
             goto label1;
-        }
+        }*/
         if(bytesRead == 0 || bytesRead == -1)
         {
             gettimeofday(&lap, NULL);
@@ -272,7 +272,7 @@ void* serviceConnection(void* newSd)
         }
         label2:
         memset(buf, '\0', sizeof(buf));
-        if(p != NULL && p->isInGame())
+        /*if(p != NULL && p->isInGame())
         {
             gettimeofday(&tv, NULL);
             lobby* l = p->getMyLobby();
@@ -288,7 +288,7 @@ void* serviceConnection(void* newSd)
             {
                 write(indP->getPlayerSocket(), message.c_str(), message.length());
             }
-        }
+        }*/
     }
     return NULL;
 }
@@ -447,8 +447,14 @@ void lobbyInfo(char* buf, player* p)//Sends an information message to the specif
         return;
     }
     message = "IT/";
-    message += std::to_string(l->getLobbyNumPlayers());
-    message += "\n";
+    for(player* indP: l->getPlayers())
+    {
+        message += std::to_string(p->getPlayerId());
+        message += "/";
+        message += p->getPlayerName();
+        message += "\n";
+    }
+    std::cout << message << std::endl;
     write(p->getPlayerSocket(), message.c_str(), message.length());
 }
 
@@ -532,7 +538,7 @@ void exitLobby(player* p)//Allows the player to exit a lobby only if they occupy
     write(p->getPlayerSocket(), message.c_str(), message.length());
 }
 
-void startGame(char* buf, player* p)
+void startGame(char* buf, player* p)//Starts a game for all players in the lobby the host is in. Give all players random position values.
 {
     if(p == NULL)
     {
@@ -567,34 +573,24 @@ void startGame(char* buf, player* p)
     message = "ST\n";
     for(player* indP: l->getPlayers())
     {
+        std::cout << indP->getPlayerName() << std::endl;
         indP->setInGame(true);
         indP->setAlive(true);
+        indP->setXPos(std::rand() % 50);
+        indP->setYPos(std::rand() % 50);
+        write(indP->getPlayerSocket(), message.c_str(), message.length());
+    }
+    message = "M/";
+    message += l->getAlivePlayersPos();
+    for(player* indP: l->getPlayers())
+    {
         write(indP->getPlayerSocket(), message.c_str(), message.length());
     }
 }
 
-void sendGameState(char* buf, player* p)//
-{
-    if(p == NULL)
-    {
-        std::cout << "Client trying to access game services before registering" << std::endl;
-        return;
-    }
-    std::string message;
-    if(!p->isInGame())
-    {
-        std::cout << "Player is trying to access game services while not in game" << std::endl;
-        message = "MF\n";
-        write(p->getPlayerSocket(), message.c_str(), message.length());
-        return;
-    }
-    write(p->getPlayerSocket(), buf, BUF_SIZE);
-    //Only send game state information of alive people to all people:
-    //------->
-}
-
 void changeDirection(char* buf, player* p)//May need to send error packet
 {
+    std::cout << buf << std::endl;
     if(p == NULL)
     {
         std::cout << "Client trying to access game services before registering" << std::endl;
@@ -661,12 +657,16 @@ void death(char* buf, player* p)
 
 void updateNumLobbyPlayers(lobby* l)//Sends an information message to all players noting how many players are in the lobby
 {
-    std::string message;
+    std::string message = "IT/";
     for(player* p: l->getPlayers())
     {
-        message = "IT/";
-        message += std::to_string(l->getLobbyNumPlayers()).c_str();
+        message += std::to_string(p->getPlayerId());
+        message += "/";
+        message += p->getPlayerName();
         message += "\n";
+    }
+    for(player* p: l->getPlayers())
+    {
         write(p->getPlayerSocket(), message.c_str(), message.length());
     }
 }
