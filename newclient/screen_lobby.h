@@ -55,9 +55,6 @@ private:
     bool exiting;
 
     // Number of players (todo: names)
-    int players;
-
-    // Am host?
-    bool host;
+    vector<string> players;
 };
 

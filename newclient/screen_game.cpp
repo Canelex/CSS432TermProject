@@ -22,6 +22,8 @@ void GameScreen::init() {
     dead = false;
 }
 
+int dir = -1;
+
 /**
 * This method is called whenever an event happens and this
 * screen is currently being rendered.
@@ -50,20 +52,24 @@ void GameScreen::handleEvent(SDL_Event& event) {
             return; // no controls for dead people
         }
 
-        if (key == "W" || key == "Up") {
+        if (dir != 0 && (key == "W" || key == "Up")) {
             app->getNetworkManager()->sendPlayerDir(0);
+            dir = 0;
         }
 
-        if (key == "D" || key == "Right") {
+        if (dir != 1 && (key == "D" || key == "Right")) {
             app->getNetworkManager()->sendPlayerDir(1);
+            dir = 1;
         }
 
-        if (key == "S" || key == "Down") {
+        if (dir != 2 && (key == "S" || key == "Down")) {
             app->getNetworkManager()->sendPlayerDir(2);
+            dir = 2;
         }
 
-        if (key == "A" || key == "Left") {
+        if (dir != 3 && (key == "A" || key == "Left")) {
             app->getNetworkManager()->sendPlayerDir(3);
+            dir = 3;
         }
     }
 }
@@ -87,58 +93,59 @@ void GameScreen::handlePacket(string packet) {
         }
         break;
     case 'M':
-        index = packet.find_first_of("M/");
+        try {
+            index = packet.find_first_of("M/");
 
-        // Bad input
-        if (index == string::npos) {
-            return;
-        }
+            // Bad input
+            if (index == string::npos) {
+                return;
+            }
 
-        // Cut out the M/
-        packet = packet.substr(index + 2);
+            // Cut out the M/
+            packet = packet.substr(index + 2);
 
-        cout << "pack " << packet << endl;
+            // Maximum of 100 players
+            for (int i = 0; i < 100; i++) {
+                // Parse ID
+                index = packet.find_first_of('/');
+                if (index == string::npos) break;
+                int id = stoi(packet.substr(0, index));
+                packet = packet.substr(index + 1);
 
-        // Maximum of 100 players
-        for (int i = 0; i < 100; i++) {
-            // Parse ID
-            index = packet.find_first_of('/');
-            if (index == string::npos) break;
-            int id = stoi(packet.substr(0, index));
-            packet = packet.substr(index + 1);
+                // Parse x
+                index = packet.find_first_of('/');
+                if (index == string::npos) break;
+                int x = stoi(packet.substr(0, index));
+                packet = packet.substr(index + 1);
 
-            // Parse x
-            index = packet.find_first_of('/');
-            if (index == string::npos) break;
-            int x = stoi(packet.substr(0, index));
-            packet = packet.substr(index + 1);
+                // Parse y
+                index = packet.find_first_of('\n');
+                if (index == string::npos) break;
+                int y = stoi(packet.substr(0, index));
+                packet = packet.substr(index + 1);
 
-            // Parse y
-            index = packet.find_first_of('\n');
-            if (index == string::npos) break;
-            int y = stoi(packet.substr(0, index));
-            packet = packet.substr(index + 1);
-
-            // Store player
-            Player p = { id, x, y };
-            if (id == app->getPlayerId()) {
-                if (player.id != -1) {
-                    players.push_back(player);
+                // Store player
+                Player p = { id, x, y };
+                if (id == app->getPlayerId()) {
+                    if (player.id != -1) {
+                        players.push_back(player);
+                    }
+                    player = p;
+                    // This is our player!
                 }
-                player = p;
-                // This is our player!
-            } else {
-                // It's not, store them on map
-                players.push_back(p);
-            }
+                else {
+                    // It's not, store them on map
+                    players.push_back(p);
+                }
 
-            // Do not have color for this guy
-            if (colors.find(id) == colors.end()) {
-                colors.insert(make_pair(id, randomColor()));
+                // Do not have color for this guy
+                if (colors.find(id) == colors.end()) {
+                    colors.insert(make_pair(id, randomColor()));
+                }
             }
-
-            cout << "POS: " <<  p.x << ", " << p.y << ", " << p.id << endl;
         }
+        catch (exception ex) {}
+        
         break;
     }
 }
@@ -159,8 +166,8 @@ void GameScreen::update() {
         if (!dead && player.x == p.x && player.y == p.y) {
 
             // send dead event
-            app->getNetworkManager()->sendPlayerDead();
-            dead = true;
+            //app->getNetworkManager()->sendPlayerDead();
+            //dead = true;
         }
     }
 }

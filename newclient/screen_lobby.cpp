@@ -8,7 +8,6 @@
 void LobbyScreen::init() {
     // Request for data
     exiting = false;
-    host = true;
 }
 
 /**
@@ -46,7 +45,7 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
         }
 
         // start 780 20 100 50
-        if (players >= 0 &&
+        if (players.size() >= 0 &&
             x >= 780 && x <= 780 + 100 &&
             y >= 20 && y <= 20 + 50) {
 
@@ -78,7 +77,6 @@ void LobbyScreen::handlePacket(string packet) {
             players = 0;
         }*/
         cout << packet << endl;
-        players = 0;
         break;
     case 'E':
         if (packet == "ET\n") {
@@ -125,15 +123,11 @@ void LobbyScreen::render() {
     // Render the back button
     TexMan::drawHoverImage("assets/exit_btn.png", 20, 20, 100, 50, mx, my);
 
-    if (host) {
-        // Render the start button
-        TexMan::drawHoverImage("assets/start_btn.png", 780, 20, 100, 50, mx, my);
-    } else {
-        TexMan::drawText("Wait for host to start...", { 255, 255, 255, 255 }, 15, 800, 45);
-    }
+    // Render the start button
+    TexMan::drawHoverImage("assets/start_btn.png", 780, 20, 100, 50, mx, my);
 
     // Render the number of players
-    TexMan::drawText("Players: " + to_string(players), { 255, 255, 255, 255 }, 40, 450, 300);
+    //TexMan::drawText("Players: " + to_string(players), { 255, 255, 255, 255 }, 40, 450, 300);
 }
 
 /**
