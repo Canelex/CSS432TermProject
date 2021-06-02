@@ -19,11 +19,13 @@
 
 const unsigned int BUF_SIZE = 65535;
 
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+int PLAYER_ID = 0;
 
 std::vector<lobby*> lobbies;
 
-void* threadConnection(void* newSd);
+//void* threadConnection(void* newSd);
 
 void* serviceConnection(void* newSd);
 
@@ -39,9 +41,15 @@ void lobbyInfo(char* buf, player* p);
 
 void joinLobby(char* buf, player* p);
 
-void exitLobby(char* buf, player* p);
+void exitLobby(player* p);
 
-void playerInLobbyCheck(player* p);
+void startGame(char* buf, player* p);
+
+void sendGameState(char* buf, player* p);
+
+void changeDirection(char* buf, player* p);
+
+void death(char* buf, player* p);
 
 void updateNumLobbyPlayers(lobby* l);
 
@@ -131,40 +139,40 @@ int main ()
 }
 
 //Legacy code for basic reading messages from TCP connected client socket
-void* threadConnection(void* newSd)
-{
-    int fd = *(int*)newSd;
-
-    while(true)
-    { 
-        // Read data from the socket
-        char buf[BUF_SIZE];
-        int bytesRead = read(fd, buf, BUF_SIZE);
-        if(bytesRead == 0 || bytesRead == -1)
-        {
-            continue;
-        }
-        pthread_mutex_lock(&lock);
-        std::cout << "read " << bytesRead << " bytes" << std::endl;
-        std::cout << "Received: " << buf << std::endl;
-        if(strcmp(buf, "exit") == 0 || strcmp(buf, "exit\r\n") == 0)
-        {
-            std::cout << "Closing connection" << std::endl;
-            close(fd);
-            pthread_mutex_unlock(&lock);
-            break;
-        }
-        else if(strcmp(buf, "HELP\r\n") == 0 || strcmp(buf, "HELP") == 0)
-        {
-            std::cout << "Port scanner possibly found." << std::endl;
-            write(fd, "Piss Off\n", 10);
-        }
-        memset(buf, 0, sizeof(buf));
-        pthread_mutex_unlock(&lock);
-    }
-    
-    return NULL;
-}
+// void* threadConnection(void* newSd)
+// {
+//     int fd = *(int*)newSd;
+//
+//     while(true)
+//     { 
+//         // Read data from the socket
+//         char buf[BUF_SIZE];
+//         int bytesRead = read(fd, buf, BUF_SIZE);
+//         if(bytesRead == 0 || bytesRead == -1)
+//         {
+//             continue;
+//         }
+//         pthread_mutex_lock(&lock);
+//         std::cout << "read " << bytesRead << " bytes" << std::endl;
+//         std::cout << "Received: " << buf << std::endl;
+//         if(strcmp(buf, "exit") == 0 || strcmp(buf, "exit\r\n") == 0)
+//         {
+//             std::cout << "Closing connection" << std::endl;
+//             close(fd);
+//             pthread_mutex_unlock(&lock);
+//             break;
+//         }
+//         else if(strcmp(buf, "HELP\r\n") == 0 || strcmp(buf, "HELP") == 0)
+//         {
+//             std::cout << "Port scanner possibly found." << std::endl;
+//             write(fd, "Piss Off\n", 10);
+//         }
+//         memset(buf, 0, sizeof(buf));
+//         pthread_mutex_unlock(&lock);
+//     }
+//    
+//     return NULL;
+// }
 
 //Servicing TCP client connection.
 void* serviceConnection(void* newSd)
@@ -187,18 +195,14 @@ void* serviceConnection(void* newSd)
                 if(p != NULL && p->isInLobby())
                 {
                     std::cout << "Cleaning up player out of lobby" << std::endl;
-                    for(lobby* l: lobbies)
+                    lobby* l = p->getMyLobby();
+                    if(l->popPlayer(p) != NULL)
                     {
-                        if(l->findPlayerPop(p) != NULL)
-                        {
-                            updateNumLobbyPlayers(l);
-                        }
+                        updateNumLobbyPlayers(l);
                     }
                 }
                 close(fd);
-                std::cout << "closing fd" << std::endl;
                 delete p;
-                std::cout << "deleting player" << std::endl;
                 return NULL;
             }
         }
@@ -206,13 +210,6 @@ void* serviceConnection(void* newSd)
         {
             case 'R':
                 gettimeofday(&tv, NULL);
-                /*if(p != NULL)
-                {
-                    std::cout << "Client trying to double register a player" << std::endl;
-                    std::string message = "RF\n";
-                    write(p->getPlayerSocket(), message.c_str(), message.length());
-                    break;
-                }*/
                 std::cout << "Registering Player" << std::endl;
                 p = registration(buf, fd);
                 break;
@@ -234,19 +231,33 @@ void* serviceConnection(void* newSd)
                 break;
             case 'E':
                 gettimeofday(&tv, NULL);
-                exitLobby(buf, p);
+                exitLobby(p);
+                break;
+            case 'S':
+                gettimeofday(&tv, NULL);
+                startGame(buf, p);
+                break;
+            case 'M':
+                gettimeofday(&tv, NULL);
+                sendGameState(buf, p);
+                break;
+            case 'T':
+                gettimeofday(&tv, NULL);
+                changeDirection(buf, p);
+                break;
+            case 'D':
+                gettimeofday(&tv, NULL);
+                death(buf, p);
                 break;
             case 'Q':
                 std::cout << "Connection Closing" << std::endl;
                 if(p != NULL && p->isInLobby())
                 {
                     std::cout << "Cleaning up player out of lobby" << std::endl;
-                    for(lobby* l: lobbies)
+                    lobby* l = p->getMyLobby();
+                    if(l->popPlayer(p) != NULL)
                     {
-                        if(l->findPlayerPop(p) != NULL)
-                        {
-                            updateNumLobbyPlayers(l);
-                        }
+                        updateNumLobbyPlayers(l);
                     }
                 }
                 close(fd);
@@ -287,6 +298,8 @@ player* registration(char* buf, int& fd)//Registers a player to the game. Must d
     std::cout << token << std::endl;
     p = new player();
     p->setName(token);
+    p->setPlayerId(PLAYER_ID);
+    PLAYER_ID++;
     p->setSocket(fd);
     message = "RT\n";
     write(p->getPlayerSocket(), message.c_str(), message.length());
@@ -323,7 +336,16 @@ void createLobby(char* buf, player* p)//Creates a new lobby and adds the player 
         std::cout << "Client connection is trying to access lobby services before registration" << std::endl;
         return;
     }
-    playerInLobbyCheck(p);
+    if(p->isInLobby())
+    {
+        lobby* l = p->getMyLobby();
+        if(l->popPlayer(p) != NULL)
+        {
+            updateNumLobbyPlayers(l);
+        }
+    }
+    p->setInGame(false);
+    p->setAlive(true);
     std::string message;
     char* token = strtok(buf, "/"); //Grabs the first letter of the command
     token = strtok(NULL, "/"); //Grabs the lobby name
@@ -357,7 +379,6 @@ void createLobby(char* buf, player* p)//Creates a new lobby and adds the player 
     l->setLobbySize(size);
     l->setLobbyId(lobbyIDGen());
     l->addPlayer(p);
-    p->setInLobby(true);
     lobbies.push_back(l);
     message = "CT/";
     message += std::to_string(l->getLobbyId());
@@ -391,26 +412,18 @@ void lobbyInfo(char* buf, player* p)//Sends an information message to the specif
         write(p->getPlayerSocket(), message.c_str(), message.length());
         return;
     }
-    bool sent = false;
-    for(lobby* indL: lobbies)//Find the correct lobby and make sure the player is in that lobby
-    {
-        if(indL->getLobbyId() == atoi(token) && indL->findPlayer(p))
-        {
-            sent = true;
-            message = "IT/";
-            message += std::to_string(indL->getLobbyNumPlayers());
-            message += "\n";
-            write(p->getPlayerSocket(), message.c_str(), message.length());
-            break;
-        }
-    }
-    if(!sent)//If the message wasn't sent then the lobby doesn't exist or the player isn't in the specified lobby
+    lobby* l = p->getMyLobby();
+    if(l->getLobbyId() != atoi(token))
     {
         std::cout << "Player tried to get some other lobbies info that they aren't a part of" << std::endl;
         message = "IF\n";
         write(p->getPlayerSocket(), message.c_str(), message.length());
-        return; 
-    }  
+        return;
+    }
+    message = "IT/";
+    message += std::to_string(l->getLobbyNumPlayers());
+    message += "\n";
+    write(p->getPlayerSocket(), message.c_str(), message.length());
 }
 
 void joinLobby(char* buf, player* p)//Allows the player to join lobbies that aren't full
@@ -420,7 +433,16 @@ void joinLobby(char* buf, player* p)//Allows the player to join lobbies that are
         std::cout << "Client trying to access lobby services before registration" << std::endl;
         return;
     }
-    playerInLobbyCheck(p);
+    if(p->isInLobby())
+    {
+        lobby* l = p->getMyLobby();
+        if(l->popPlayer(p) != NULL)
+        {
+            updateNumLobbyPlayers(l);
+        }
+    }
+    p->setInGame(false);
+    p->setAlive(true);
     std::string message;
     char* token = strtok(buf, "/");//Get the first letter of the command
     token = strtok(NULL, "\r\n");//Get the lobby ID
@@ -431,7 +453,6 @@ void joinLobby(char* buf, player* p)//Allows the player to join lobbies that are
         write(p->getPlayerSocket(), message.c_str(), message.length());
         return;
     }
-    lobby* theLobby;
     for(lobby* l: lobbies)//For every lobby on the server find the correct one and add the player to the lobby
     {
         if(l->getLobbyId() == atoi(token))
@@ -444,9 +465,6 @@ void joinLobby(char* buf, player* p)//Allows the player to join lobbies that are
                 return;
             }
             l->addPlayer(p);
-            //updateNumLobbyPlayers(l);
-            p->setInLobby(true);
-            theLobby = l;
             break;
         }
     }
@@ -459,48 +477,159 @@ void joinLobby(char* buf, player* p)//Allows the player to join lobbies that are
     }
     message = "JT\n";
     write(p->getPlayerSocket(), message.c_str(), message.length());
-    updateNumLobbyPlayers(theLobby);
+    updateNumLobbyPlayers(p->getMyLobby());
 }
 
-void exitLobby(char* buf, player* p)//Allows the player to exit a lobby only if they occupy a lobby
+void exitLobby(player* p)//Allows the player to exit a lobby only if they occupy a lobby
 {
     if(p == NULL)
     {
         std::cout << "Client trying to access lobby services before registering" << std::endl;
+        return;
     }
     std::string message;
     if(!p->isInLobby())
     {
-        std::cout << "Player trying to exit a lobby while not in a looby" << std::endl;
+        std::cout << "Player trying to exit a lobby while not in a lobby" << std::endl;
         message = "EF\n";
         write(p->getPlayerSocket(), message.c_str(), message.length());
         return;
     }
-    playerInLobbyCheck(p);
+    lobby* l = p->getMyLobby();
+    if(l->popPlayer(p) != NULL)
+    {
+        updateNumLobbyPlayers(l);
+    }
+    p->setInGame(false);
+    p->setAlive(true);
     message = "ET\n";
     write(p->getPlayerSocket(), message.c_str(), message.length());
 }
 
-void playerInLobbyCheck(player* p)//Check if the player is in a lobby and pull them out if they are
+void startGame(char* buf, player* p)
 {
-    if(p->isInLobby())
+    if(p == NULL)
     {
-        std::cout << "Player is already in a lobby, taking player out of current lobby." << std::endl;
-        for(lobby* indL: lobbies)
+        std::cout << "Client trying to access game services before registering" << std::endl;
+        return;
+    }
+    std::string message;
+    char* token = strtok(buf, "/");
+    token = strtok(NULL, "\r\n");
+    if(token == NULL)
+    {
+        std::cout << "LobbyId token failed" << std::endl;
+        message = "SF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    lobby* l = p->getMyLobby();
+    if(l->getLobbyId() != atoi(token))
+    {
+        std::cout << "Player trying to start a game from a lobby they aren't in" << std::endl;
+        message = "SF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    if(!l->findPlayer(p))
+    {
+        std::cout << "Player trying to start a game from a lobby they aren't in" << std::endl;
+        message = "SF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    message = "ST\n";
+    for(player* indP: l->getPlayers())
+    {
+        indP->setInGame(true);
+        indP->setAlive(true);
+        write(indP->getPlayerSocket(), message.c_str(), message.length());
+    }
+
+}
+
+void sendGameState(char* buf, player* p)//May need to send error packet
+{
+    if(p == NULL)
+    {
+        std::cout << "Client trying to access game services before registering" << std::endl;
+        return;
+    }
+    std::string message;
+    if(!p->isInGame())
+    {
+        std::cout << "Player is trying to access game services while not in game" << std::endl;
+        message = "MF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    write(p->getPlayerSocket(), buf, BUF_SIZE);
+}
+
+void changeDirection(char* buf, player* p)//May need to send error packet
+{
+    if(p == NULL)
+    {
+        std::cout << "Client trying to access game services before registering" << std::endl;
+        return;
+    }
+    std::string message;
+    if(!p->isInGame())
+    {
+        std::cout << "Player is trying to access game services while not in game" << std::endl;
+        message = "TF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    char* token = strtok(buf, "/");
+    token = strtok(NULL, "\r\n");
+    if(token == NULL)
+    {
+        std::cout << "Direction token failed" << std::endl;
+        message = "TF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    if(atoi(token) > 3 || atoi(token) < 0)
+    {
+        std::cout << "Player sent invalid direction value" << std::endl;
+        message = "TF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    p->setDirection(atoi(token));
+    message = "TT\n";
+    write(p->getPlayerSocket(), message.c_str(), message.length());
+}
+
+void death(char* buf, player* p)
+{
+    if(p == NULL)
+    {
+        std::cout << "Client trying to access game services before registering" << std::endl;
+        return;
+    }
+    std::string message;
+    if(!p->isInGame())
+    {
+        std::cout << "Player is trying to access game service while not in game" << std::endl;
+        message = "DF\n";
+        write(p->getPlayerSocket(), message.c_str(), message.length());
+        return;
+    }
+    message = "DT\n";
+    write(p->getPlayerSocket(), message.c_str(), message.length());
+    p->setAlive(false);
+    lobby* l = p->getMyLobby();
+    if(l->checkForWinner())
+    {
+        std::cout << "Game has concluded with a winner" << std::endl;
+        for(player* indP: l->getPlayers())
         {
-            if(indL->findPlayerPop(p) != NULL)
-            {
-                p->setInLobby(false);
-                updateNumLobbyPlayers(indL);
-                break;
-            }
+            indP->setInGame(false);
+            indP->setAlive(true);
         }
     }
-    else
-    {
-        std::cout << "Player isn't in lobby, cannot take them out of lobby." << std::endl;
-    }
-    return;
 }
 
 void updateNumLobbyPlayers(lobby* l)//Sends an information message to all players noting how many players are in the lobby
