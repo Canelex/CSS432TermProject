@@ -45,7 +45,7 @@ void LobbyScreen::handleEvent(SDL_Event& event) {
         }
 
         // start 780 20 100 50
-        if (players.size() >= 0 &&
+        if (players.size() >= 2 &&
             x >= 780 && x <= 780 + 100 &&
             y >= 20 && y <= 20 + 50) {
 
