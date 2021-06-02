@@ -1,5 +1,11 @@
 #include "screen_game.h"
 
+SDL_Color randomColor() {
+    Uint8 r = rand() % 256;
+    Uint8 g = rand() % 256;
+    Uint8 b = rand() % 256;
+    return { r, g, b, 255 };
+}
 
 /*
 * This method is called when the game is first created. It
@@ -79,7 +85,52 @@ void GameScreen::handlePacket(string packet) {
         }
         break;
     case 'M':
-        // Parse each player
+        index = packet.find_first_of("M/");
+
+        // Bad input
+        if (index == string::npos) {
+            return;
+        }
+
+        // Cut out the M/
+        packet = packet.substr(index + 2);
+
+        // Maximum of 100 players
+        for (int i = 0; i < 100; i++) {
+            // Parse ID
+            index = packet.find_first_of('/');
+            if (index == string::npos) break;
+            int id = stoi(packet.substr(0, index));
+            packet = packet.substr(index + 1);
+
+            // Parse x
+            index = packet.find_first_of('/');
+            if (index == string::npos) break;
+            int x = stoi(packet.substr(0, index));
+            packet = packet.substr(index + 1);
+
+            // Parse y
+            index = packet.find_first_of('\n');
+            if (index == string::npos) break;
+            int y = stoi(packet.substr(0, index));
+            packet = packet.substr(index + 1);
+
+            // Store player
+            Player p = { id, x, y };
+            if (id == app->getPlayerId()) {
+                players.push_back(player);
+                player = p;
+                // This is our player!
+            } else {
+                // It's not, store them on map
+                players.push_back(p);
+            }
+
+            // Do not have color for this guy
+            if (colors.find(id) == colors.end()) {
+                colors.insert(make_pair(id, randomColor()));
+            }
+        }
         break;
     }
 }
@@ -97,15 +148,13 @@ void GameScreen::update() {
         Player p = players[i];
 
         // Did I collide?
-        if (player.x + 10 >= p.x && player.x <= p.x + 10 &&
-            player.y + 10 >= p.y && player.y <= p.y + 10) {
+        if (!dead && player.x == p.x && player.y == p.y) {
 
             // send dead event
             app->getNetworkManager()->sendPlayerDead();
-
+            dead = true;
         }
     }
-
 }
 
 /**
@@ -124,18 +173,36 @@ void GameScreen::render() {
     int ms = 10;
     TexMan::drawRect({ 0, 0, 0, 180 }, mx, my, 50 * ms, 50 * ms);
 
-    // Draw each player
+    // Draw each player segment
     for (int i = 0; i < players.size(); i++) {
 
         // Render each player square
         Player p = players[i];
 
+        SDL_Color color = colors.find(p.id)->second;
+
         // Render each rect
-        TexMan::drawRect(p.color, mx + p.x, my + p.y, 10, 10);
+        TexMan::drawRect(color, mx + p.x * 10, my + p.y * 10, 10, 10);
     }
 
-    // Draw your player
-    TexMan::drawRect({ 255, 255, 255, 255 }, mx + player.x, my + player.y, 10, 10);
+    // Draw each color
+    map<int, SDL_Color>::iterator it;
+    int y = 50;
+    for (it = colors.begin(); it != colors.end(); ++it) {
+        SDL_Color c = it->second;
+        int id = it->first;
+
+        TexMan::drawText(to_string(id), c, 20, 50, y);
+        y += 20;
+    }
+    
+    if (!dead) {
+        // Draw your player
+        TexMan::drawRect({ 255, 255, 255, 255 }, mx + player.x * 10, my + player.y * 10, 10, 10);
+    } else {
+        // Draw game over text
+        TexMan::drawText("Game Over.", { 255, 255, 255, 255 }, 30, 450, 30);
+    }
 }
 
 /**

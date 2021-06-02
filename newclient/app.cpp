@@ -68,13 +68,45 @@ void App::init(const char* title, int xpos, int ypos, int width, int height, boo
     openScreen(0);
 }
 
+int px = 25; 
+int py = 25;
+int dir = 0;
+
 /**
 * This function handles all user input to the system. It is called every
 * tick by the main application loop.
 */
 void App::handleEvents() {
+    
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_KEYDOWN) {
+            string key = SDL_GetKeyName(event.key.keysym.sym);
+            if (key == "Left") {
+                dir -= 1;
+                if (dir < 0) dir = 3;
+            }
+            if (key == "Right") {
+                dir += 1;
+                if (dir > 3) dir = 0;
+            }
+            if (key == "E") {
+                string fakeevent = "M/";
+                for (int i = 95; i < 99; i++) {
+                    fakeevent += to_string(i) + "/" + to_string(rand() % 50) + "/" + to_string(rand() % 50) + "\n";
+                }
+                if (dir == 0) py--;
+                if (dir == 1) px++;
+                if (dir == 2) py++;
+                if (dir == 3) px--;
+
+                fakeevent += to_string(playerId) + "/" + to_string(px) + "/" + to_string(py) + "\n";
+
+                cout << "Sending fake packet" << fakeevent << endl;
+                screens[activeScreenIndex]->handlePacket(fakeevent);
+            }
+        }
+
         switch (event.type) {
         case SDL_QUIT:
             if (!closing && netman->isConnected()) {

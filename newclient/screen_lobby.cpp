@@ -69,6 +69,7 @@ void LobbyScreen::handlePacket(string packet) {
         if (index != string::npos) {
             string num = packet.substr(index + 1);
             players = stoi(num);
+            // TODO: get player list
         } else {
             players = 0;
         }
