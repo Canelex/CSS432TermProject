@@ -17,13 +17,14 @@ public:
     int getLobbyId();
     int getLobbySize();
     int getLobbyNumPlayers();
+    std::string getAlivePlayersPos();
 
     void setLobbySize(int size);
     void setLobbyName(std::string name);
     void setLobbyId(int Id);
 
     void addPlayer(player* newPlayer);
-    void update();
+    void updatePlayersPos();
     void pushPlayersInGame();
     player* popPlayer(player* p);
     bool findPlayer(player* p);

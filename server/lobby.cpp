@@ -25,6 +25,24 @@ int lobby::getLobbyNumPlayers()
     return this->players.size();
 }
 
+std::string lobby::getAlivePlayersPos()
+{
+    std::string message;
+    for(player* p: this->players)
+    {
+        if(p->isAlive() && p->isInGame())
+        {
+            message += std::to_string(p->getPlayerId());
+            message += "/";
+            message += std::to_string(p->getPlayerXPos());
+            message += "/";
+            message += std::to_string(p->getPlayerYPos());
+            message += "\n";
+        }
+    }
+    return message;
+}
+
 player* lobby::popPlayer(player* p)
 {
     int i = 0;
@@ -77,9 +95,36 @@ void lobby::addPlayer(player* newPlayer)
     newPlayer->setInLobby(true);
 }
 
-void lobby::update()
+void lobby::updatePlayersPos()
 {
-
+    
+    for(player* p: this->players)
+    {
+        int newPos = -1;
+        switch(p->getDirection())
+        {
+            case 0:
+                newPos = p->getPlayerYPos();
+                newPos += 1;
+                p->setYPos(newPos);
+                break;
+            case 1:
+                newPos = p->getPlayerXPos();
+                newPos += 1;
+                p->setXPos(newPos);
+                break;
+            case 2:
+                newPos = p->getPlayerYPos();
+                newPos -= 1;
+                p->setYPos(newPos);
+                break;
+            case 3:
+                newPos = p->getPlayerXPos();
+                newPos -= 1;
+                p->setXPos(newPos);
+                break;
+        }
+    }
 }
 
 void lobby::pushPlayersInGame()
@@ -100,7 +145,7 @@ bool lobby::checkForWinner()
         {
             deadPlayers++;
         }
-        if(this->players.size() - deadPlayers == 1)
+        if(this->players.size() - deadPlayers <= 1)
         {
             return true;
         }

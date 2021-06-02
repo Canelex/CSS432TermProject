@@ -186,6 +186,15 @@ void* serviceConnection(void* newSd)
     while(true)
     {
         int bytesRead = read(fd, buf, BUF_SIZE);
+        if(p != NULL && p->isInGame())
+        {
+            gettimeofday(&lap, NULL);
+            if(bytesRead == 0 || bytesRead == -1)
+            {
+                goto label2;
+            }
+            goto label1;
+        }
         if(bytesRead == 0 || bytesRead == -1)
         {
             gettimeofday(&lap, NULL);
@@ -206,6 +215,7 @@ void* serviceConnection(void* newSd)
                 return NULL;
             }
         }
+        label1:
         switch(buf[0])
         {
             case 'R':
@@ -237,10 +247,6 @@ void* serviceConnection(void* newSd)
                 gettimeofday(&tv, NULL);
                 startGame(buf, p);
                 break;
-            case 'M':
-                gettimeofday(&tv, NULL);
-                sendGameState(buf, p);
-                break;
             case 'T':
                 gettimeofday(&tv, NULL);
                 changeDirection(buf, p);
@@ -264,7 +270,25 @@ void* serviceConnection(void* newSd)
                 delete p;
                 return NULL;
         }
+        label2:
         memset(buf, '\0', sizeof(buf));
+        if(p != NULL && p->isInGame())
+        {
+            gettimeofday(&tv, NULL);
+            lobby* l = p->getMyLobby();
+            l->updatePlayersPos();
+        }
+        if(((lap.tv_sec * 1000000) + lap.tv_usec) - ((tv.tv_sec * 1000000) + tv.tv_usec) > 500000 && p != NULL && p->isInGame())
+        {
+            lobby* l = p->getMyLobby();
+            std::string message;
+            message += "M/";
+            message += l->getAlivePlayersPos();
+            for(player* indP: l->getPlayers())
+            {
+                write(indP->getPlayerSocket(), message.c_str(), message.length());
+            }
+        }
     }
     return NULL;
 }
@@ -303,6 +327,7 @@ player* registration(char* buf, int& fd)//Registers a player to the game. Must d
     p->setSocket(fd);
     message = "RT/";
     message += std::to_string(p->getPlayerId());
+    message += "\n";
     write(p->getPlayerSocket(), message.c_str(), message.length());
     return p;
 }
@@ -546,7 +571,6 @@ void startGame(char* buf, player* p)
         indP->setAlive(true);
         write(indP->getPlayerSocket(), message.c_str(), message.length());
     }
-
 }
 
 void sendGameState(char* buf, player* p)//
@@ -565,6 +589,8 @@ void sendGameState(char* buf, player* p)//
         return;
     }
     write(p->getPlayerSocket(), buf, BUF_SIZE);
+    //Only send game state information of alive people to all people:
+    //------->
 }
 
 void changeDirection(char* buf, player* p)//May need to send error packet
