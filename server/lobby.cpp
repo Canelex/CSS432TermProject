@@ -32,6 +32,7 @@ std::string lobby::getAlivePlayersPos()
     {
         if(p->isAlive() && p->isInGame())
         {
+            message += "M/";
             message += std::to_string(p->getPlayerId());
             message += "/";
             message += std::to_string(p->getPlayerXPos());
@@ -97,7 +98,6 @@ void lobby::addPlayer(player* newPlayer)
 
 void lobby::updatePlayersPos()
 {
-    
     for(player* p: this->players)
     {
         int newPos = -1;
@@ -105,7 +105,7 @@ void lobby::updatePlayersPos()
         {
             case 0:
                 newPos = p->getPlayerYPos();
-                newPos += 1;
+                newPos -= 1;
                 p->setYPos(newPos);
                 break;
             case 1:
@@ -115,7 +115,7 @@ void lobby::updatePlayersPos()
                 break;
             case 2:
                 newPos = p->getPlayerYPos();
-                newPos -= 1;
+                newPos += 1;
                 p->setYPos(newPos);
                 break;
             case 3:
@@ -151,4 +151,16 @@ bool lobby::checkForWinner()
         }
     }
     return false;
+}
+
+player* lobby::getWinner()
+{
+    for(player* p: this->players)
+    {
+        if(p->isAlive() && p->isInGame())
+        {
+            return p;
+        }
+    }
+    return NULL;
 }

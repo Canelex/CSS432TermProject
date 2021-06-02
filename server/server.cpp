@@ -186,7 +186,7 @@ void* serviceConnection(void* newSd)
     while(true)
     {
         int bytesRead = read(fd, buf, BUF_SIZE);
-        /*if(p != NULL && p->isInGame())
+        if(p != NULL && p->isInGame())
         {
             gettimeofday(&lap, NULL);
             if(bytesRead == 0 || bytesRead == -1)
@@ -194,7 +194,7 @@ void* serviceConnection(void* newSd)
                 goto label2;
             }
             goto label1;
-        }*/
+        }
         if(bytesRead == 0 || bytesRead == -1)
         {
             gettimeofday(&lap, NULL);
@@ -272,23 +272,23 @@ void* serviceConnection(void* newSd)
         }
         label2:
         memset(buf, '\0', sizeof(buf));
-        /*if(p != NULL && p->isInGame())
-        {
-            gettimeofday(&tv, NULL);
-            lobby* l = p->getMyLobby();
-            l->updatePlayersPos();
-        }
-        if(((lap.tv_sec * 1000000) + lap.tv_usec) - ((tv.tv_sec * 1000000) + tv.tv_usec) > 500000 && p != NULL && p->isInGame())
+        if(p != NULL && p->isInGame())
         {
             lobby* l = p->getMyLobby();
-            std::string message;
-            message += "M/";
-            message += l->getAlivePlayersPos();
-            for(player* indP: l->getPlayers())
+            if(((lap.tv_sec * 1000000) + lap.tv_usec) - ((l->lobbyTV.tv_sec * 1000000) + l->lobbyTV.tv_usec) > 65000)
             {
-                write(indP->getPlayerSocket(), message.c_str(), message.length());
+                gettimeofday(&l->lobbyTV, NULL);
+                //std::cout << "Fast!!!" << std::endl;
+                l->updatePlayersPos();
+                std::string message;
+                message += l->getAlivePlayersPos();
+                for(player* indP: l->getPlayers())
+                {
+                    write(indP->getPlayerSocket(), message.c_str(), message.length());
+                }
+                std::cout << message << std::endl;
             }
-        }*/
+        }
     }
     return NULL;
 }
@@ -580,12 +580,6 @@ void startGame(char* buf, player* p)//Starts a game for all players in the lobby
         indP->setYPos(std::rand() % 50);
         write(indP->getPlayerSocket(), message.c_str(), message.length());
     }
-    message = "M/";
-    message += l->getAlivePlayersPos();
-    for(player* indP: l->getPlayers())
-    {
-        write(indP->getPlayerSocket(), message.c_str(), message.length());
-    }
 }
 
 void changeDirection(char* buf, player* p)//May need to send error packet
@@ -620,9 +614,11 @@ void changeDirection(char* buf, player* p)//May need to send error packet
         write(p->getPlayerSocket(), message.c_str(), message.length());
         return;
     }
+    if(p->getDirection() == atoi(token))
+    {
+        return;
+    }
     p->setDirection(atoi(token));
-    message = "TT\n";
-    write(p->getPlayerSocket(), message.c_str(), message.length());
 }
 
 void death(char* buf, player* p)
@@ -647,10 +643,26 @@ void death(char* buf, player* p)
     if(l->checkForWinner())
     {
         std::cout << "Game has concluded with a winner" << std::endl;
+        //std::string message = "W/";
+        player* theWinner = l->getWinner();
+        if(theWinner != NULL)
+        {
+            //message += theWinner->getPlayerName();
+            //message += "\n";
+            for(player* indP: l->getPlayers())
+            {
+                indP->setInGame(false);
+                indP->setAlive(true);
+                //write(indP->getPlayerSocket(), message.c_str(), message.length());
+            }
+            return;
+        }
+        //message += "NONE\n";
         for(player* indP: l->getPlayers())
         {
             indP->setInGame(false);
             indP->setAlive(true);
+            //write(indP->getPlayerSocket(), message.c_str(), message.length());
         }
     }
 }
